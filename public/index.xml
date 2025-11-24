@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>卜陋专酱</title>
+    <link>//localhost:1313/</link>
+    <description>Recent content on 卜陋专酱</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 10 Jan 2019 14:29:02 +0800</lastBuildDate>
+    <atom:link href="//localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>live</title>
+      <link>//localhost:1313/post/%E6%97%A5%E5%AD%90/</link>
+      <pubDate>Thu, 10 Jan 2019 14:29:02 +0800</pubDate>
+      <guid>//localhost:1313/post/%E6%97%A5%E5%AD%90/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>个人介绍</title>
+      <link>//localhost:1313/post/about/</link>
+      <pubDate>Wed, 09 Jan 2019 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/post/about/</guid>
+      <description>&lt;p&gt;陕西苦逼程序猿，没车没房也没存款的三好青年。&lt;/p&gt;&#xA;&lt;p&gt;个人简介:&lt;/p&gt;&#xA;&lt;p&gt;​&#x9;陕北汉子一枚，家有糟妻。毕业于安康学院，所学计算机科学与技术专业，涉猎的技术比较广泛。基础编程，数据算法，技术架构都有所研究。最喜欢的还是编程开发和开源技术搭建。&lt;/p&gt;&#xA;&lt;p&gt;​&#x9;曾工作于生物信息科技技术研究公司做过系统搭建与运维和国内系统的安全研究。现工作于银行支付业务。&lt;/p&gt;&#xA;&lt;p&gt;联系方式:&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;微信：drsin1314&lt;/li&gt;&#xA;&lt;li&gt;手机: 15615856276&lt;/li&gt;&#xA;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>个人网站</title>
+      <link>//localhost:1313/post/%E6%90%AD%E5%BB%BA/</link>
+      <pubDate>Wed, 09 Jan 2019 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/post/%E6%90%AD%E5%BB%BA/</guid>
+      <description>&lt;h1 id=&#34;卜陋专酱&#34;&gt;卜陋专酱&lt;/h1&gt;&#xA;&lt;p&gt;1.安装&lt;a href=&#34;https://github.com/gohugoio/hugo/releases&#34;&gt;Hugo&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;​&#x9;百度云盘链接：https://pan.baidu.com/s/1VnvIjkMLxndXGclACry63w 提取码：5d49&lt;/p&gt;&#xA;&lt;p&gt;2.设置环境变量&lt;/p&gt;&#xA;&lt;p&gt;3.&lt;code&gt;git clone https://github.com/wugjun/wugjun.github.io.git&lt;/code&gt;&lt;/p&gt;&#xA;&lt;p&gt;4.&lt;code&gt;hugo server&lt;/code&gt; 启动服务，访问主页http://localhost:1313&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

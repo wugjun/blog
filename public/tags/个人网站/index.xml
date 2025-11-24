@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>个人网站 on 卜陋专酱</title>
+    <link>//localhost:1313/tags/%E4%B8%AA%E4%BA%BA%E7%BD%91%E7%AB%99/</link>
+    <description>Recent content in 个人网站 on 卜陋专酱</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Wed, 09 Jan 2019 00:00:00 +0000</lastBuildDate>
+    <atom:link href="//localhost:1313/tags/%E4%B8%AA%E4%BA%BA%E7%BD%91%E7%AB%99/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>个人网站</title>
+      <link>//localhost:1313/post/%E6%90%AD%E5%BB%BA/</link>
+      <pubDate>Wed, 09 Jan 2019 00:00:00 +0000</pubDate>
+      <guid>//localhost:1313/post/%E6%90%AD%E5%BB%BA/</guid>
+      <description>&lt;h1 id=&#34;卜陋专酱&#34;&gt;卜陋专酱&lt;/h1&gt;&#xA;&lt;p&gt;1.安装&lt;a href=&#34;https://github.com/gohugoio/hugo/releases&#34;&gt;Hugo&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;​&#x9;百度云盘链接：https://pan.baidu.com/s/1VnvIjkMLxndXGclACry63w 提取码：5d49&lt;/p&gt;&#xA;&lt;p&gt;2.设置环境变量&lt;/p&gt;&#xA;&lt;p&gt;3.&lt;code&gt;git clone https://github.com/wugjun/wugjun.github.io.git&lt;/code&gt;&lt;/p&gt;&#xA;&lt;p&gt;4.&lt;code&gt;hugo server&lt;/code&gt; 启动服务，访问主页http://localhost:1313&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

@@ -1,15 +1,12 @@
 baseurl = "/"
 title = "卜陋专酱"
 languageCode = "en-us"
-paginate = "10" # Number of posts per page
 theme = "mainroad"
 disqusShortname = "" # Enable comments by entering your Disqus shortname
 googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 
-[Author] # Used in authorbox
-  name = "wu guojun"
-  bio = "墙角数枝梅，凌寒独自开。遥知不是雪，为有暗香来。"
-  avatar = "img/my2you.jpg"
+[pagination]
+  pagerSize = 10 # Number of posts per page
 
 [Params]
   subtitle = "梅花香自苦寒来" # Subtitle of your site. Used in site header
@@ -28,6 +25,10 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   #mathjax = true # Enable MathJax
   #mathjaxPath = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" # Specify MathJax path
   #mathjaxConfig = "TeX-AMS-MML_HTMLorMML" # Specify MathJax config
+[Params.author] # Used in authorbox
+  name = "wu guojun"
+  bio = "墙角数枝梅，凌寒独自开。遥知不是雪，为有暗香来。"
+  avatar = "img/my2you.jpg"
 
 [Params.sidebar]
   home = "right" # Configure layout for home page
