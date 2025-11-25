@@ -1,0 +1,40 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ] # 当推送到 main 分支时触发
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout blog source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive # 如果使用了子模块，请启用此选项
+          token: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: Build Hugo site
+        run: hugo --minify
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          # 生成并推送到的目标仓库
+          external_repository: wugjun/wugjun.github.io
+          # 推送到的目标分支
+          publish_branch: master
+          # 推送的文件目录（Hugo 生成结果）
+          publish_dir: ./public
+          # 用于推送的个人访问令牌 (PAT)
+          github_token: ${{ secrets.ACCESS_TOKEN }}
+          # 可选：保留提交历史
+          force_orphan: false
