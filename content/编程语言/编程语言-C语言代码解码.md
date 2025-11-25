@@ -5,22 +5,23 @@ description: "C语言代码解码"
 lead: "编程语言"
 disable_comments: false # Optional, disable Disqus comments if true
 authorbox: true # Optional, enable authorbox for specific post
-toc: true # Optional, enable Table of Contents for specific post
+toc: false # Optional, enable Table of Contents for specific post
 mathjax: true # Optional, enable MathJax for specific post
 categories:
   - "编程语言"
 tags:
-  - "C"
+  - "编程语言"
   
-menu: main # Optional, add page to a menu. Options: main, side, footer
+menu: side # Optional, add page to a menu. Options: main, side, footer
 draft: true
 ---
+[◀ 返回](../编程语言-汇总/)
 
 ## 问题描述
-｜字符串被显示为acssi码, 数值被hex加减
+字符串被显示为acssi码, 数值被hex加减
 
 
-![i源码](img/blowizer.png)
+![源码](/images/C_code_replay.jpeg)
 ## 转换思路
 字符: acssi 转 string 
 数值: 计算出值
