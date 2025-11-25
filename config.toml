@@ -1,15 +1,16 @@
 baseurl = "/"
-title = "卜陋专酱"
+title = "补漏砖匠"
 languageCode = "en-us"
 theme = "mainroad"
 disqusShortname = "" # Enable comments by entering your Disqus shortname
 googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 
 [pagination]
-  pagerSize = 10 # Number of posts per page
-
+  pagerSize = 5 # Number of posts per page
+[Params.style.vars]
+  highlightColor = "#3498db"
 [Params]
-  subtitle = "梅花香自苦寒来" # Subtitle of your site. Used in site header
+  subtitle = "独钓寒江雪，为有暗香来。" # Subtitle of your site. Used in site header
   description = "Wu guo jun Personal blog about everything" # Site description. Used in meta description
   #copyright = "John Doe" # copyright holder, otherwise will use site title
   #opengraph = false # Enable OpenGraph if true
@@ -27,8 +28,8 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   #mathjaxConfig = "TeX-AMS-MML_HTMLorMML" # Specify MathJax config
 [Params.author] # Used in authorbox
   name = "wu guojun"
-  bio = "墙角数枝梅，凌寒独自开。遥知不是雪，为有暗香来。"
-  avatar = "img/my2you.jpg"
+  bio = "。"
+  avatar = "img/blowizer.png"
 
 [Params.sidebar]
   home = "right" # Configure layout for home page
@@ -48,8 +49,8 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   #instagram = "username"
   #linkedin = "username"
   #telegram = "username"
-  github = "wugjun"
+  github = "blowizer"
   #gitlab = "username"
   #bitbucket = "username"
-  email = "864785862@qq.com"
+  email = "blowizer@qq.com"
   #google_plus = "profileid"

@@ -56,14 +56,14 @@
 
 # Footer
 - id: footer_credits
-  translation: "Generated with <a href=\"https://gohugo.io/\" rel=\"nofollow noopener\" target=\"_blank\">Hugo</a> and <a href=\"https://github.com/Vimux/Mainroad/\" rel=\"nofollow noopener\" target=\"_blank\">Mainroad</a> theme."
+  translation: " <a href=\"#\" rel=\"nofollow noopener\" target=\"_blank\">左键右鼠运阴阳，挖山填海码几行。</a>  <a href=\"#\" rel=\"nofollow noopener\" target=\"_blank\">人海浮沉皆过客，我是人间补漏匠。</a> "
 
 # 404
 - id: 404_title
   translation: 404. Page not found
 
 - id: 404_text
-  translation: "The page you were looking for appears to have been moved, deleted or does not exist. Please, use search or go to"
+  translation: "《寻页不遇》欲访旧时页，飘然无处寻，空余径幽深，独向链接沉。"
 
 - id: 404_linktext
-  translation: "main page"
+  translation: "主页"
