@@ -5,7 +5,7 @@ on:
     branches: [ "master" ]
   workflow_dispatch:
 
-# 设置权限，允许 GITHUB_TOKEN 推送代码
+# 设置权限，允许  推送代码
 permissions:
   contents: read
   pages: write
