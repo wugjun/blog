@@ -5,7 +5,6 @@ on:
     branches: [ "master" ]
   workflow_dispatch:
 
-# 设置权限，允许  推送代码
 permissions:
   contents: read
   pages: write
@@ -14,18 +13,19 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout blog source
         uses: actions/checkout@v4
         with:
           submodules: recursive
           token: ${{ secrets.BLOG_ACCESS_TOKEN }}
+          persist-credentials: false
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: '0.128.0'  # 建议指定具体版本
+          hugo-version: '0.128.0'
           extended: true
 
       - name: Build Hugo site
@@ -34,11 +34,9 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          token: ${{ secrets.BLOG_ACCESS_TOKEN }}
+          github_token: ${{ secrets.BLOG_ACCESS_TOKEN }}
           external_repository: wugjun/wugjun.github.io
           publish_branch: master
           publish_dir: ./public
-          github_token: ${{ secrets.BLOG_ACCESS_TOKEN }}
-          # 可选：配置用户信息
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
