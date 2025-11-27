@@ -2,7 +2,7 @@
 title: "剑法篇"
 date: 2022-07-22
 description: "C语言代码解码"
-lead: "编程语言"
+lead: "C源码加壳解析"
 disable_comments: false # Optional, disable Disqus comments if true
 authorbox: true # Optional, enable authorbox for specific post
 toc: false # Optional, enable Table of Contents for specific post
@@ -11,8 +11,6 @@ categories:
   - "编程语言"
 tags:
   - "编程语言"
-  
-menu: side # Optional, add page to a menu. Options: main, side, footer
 draft: true
 ---
 [◀ 返回](../编程语言-汇总/)
