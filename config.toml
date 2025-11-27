@@ -5,6 +5,11 @@ theme = "mainroad"
 disqusShortname = "" # Enable comments by entering your Disqus shortname
 googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
 [pagination]
   pagerSize = 5 # Number of posts per page
 [Params.style.vars]
@@ -28,7 +33,7 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
   #mathjaxConfig = "TeX-AMS-MML_HTMLorMML" # Specify MathJax config
 [Params.author] # Used in authorbox
   name = "wu guojun"
-  bio = "。"
+  bio = "北京牛马，高级 CV工程狮"
   avatar = "img/blowizer.png"
 
 [Params.sidebar]
