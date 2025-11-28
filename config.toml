@@ -4,6 +4,7 @@ languageCode = "en-us"
 theme = "mainroad"
 disqusShortname = "" # Enable comments by entering your Disqus shortname
 googleAnalytics = "" # Enable Google Analytics by entering your tracking id
+disablePathToLower = true
 
 [markup]
   [markup.goldmark]
