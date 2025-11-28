@@ -34,7 +34,7 @@ googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 [Params.author] # Used in authorbox
   name = "wu guojun"
   bio = "北京牛马，高级 CV工程狮"
-  avatar = "img/blowizer.png"
+  avatar = "img/QR.png"
 
 [Params.sidebar]
   home = "left" # Configure layout for home page
