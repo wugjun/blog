@@ -1,5 +1,5 @@
 ---
-title: "JAVA 综合测试"
+title: "剑法篇"
 date: 2025-11-28
 description: "Java 核心知识单选题练习"
 lead: "以考促学，查漏补缺"
