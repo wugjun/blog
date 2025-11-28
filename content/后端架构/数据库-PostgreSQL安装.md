@@ -1,6 +1,6 @@
 ---
 title: "典籍篇"
-date: 2025-06-20
+date: 2025-11-27
 description: "开源文档典籍篇汇总"
 lead: "聚社区之智，传技术之火"
 disable_comments: false
