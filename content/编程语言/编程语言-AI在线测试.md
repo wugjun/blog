@@ -22,7 +22,7 @@ draft: true
   <h2 class="ai-quiz-title">即时生成 AI 考题</h2>
   <p class="ai-quiz-desc">点击按钮即可调用本地大模型接口，自动生成新的考试题并追加到页面。</p>
   <div class="ai-quiz-actions">
-    <button class="ai-quiz-button" data-ai-quiz-trigger>“AI 考题”继续生成</button>
+    <button class="ai-quiz-button ai-quiz-floating-button" data-ai-quiz-trigger>“AI 考题”继续生成</button>
     <span class="ai-quiz-status" data-ai-quiz-status></span>
   </div>
   <div class="ai-quiz-results" data-ai-quiz-results></div>

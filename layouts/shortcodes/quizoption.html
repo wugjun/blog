@@ -7,8 +7,6 @@
 {{- $parentId = printf "quiz-%d" (now.Unix) }}
 {{- end }}
 <div class="quiz-option" data-value="{{ $value }}" data-explanation="{{ $explanation }}">
-  <input type="radio" name="{{ $parentId }}" id="{{ $parentId }}-{{ $value }}" value="{{ $value }}">
-  <label for="{{ $parentId }}-{{ $value }}">
-    <span class="quiz-option-label">{{ $value }}.</span><span class="quiz-option-text">{{ .Inner | markdownify }}</span>
-  </label>
+  <span class="quiz-option-label">{{ $value }}.</span>
+  <span class="quiz-option-text">{{ .Inner | markdownify }}</span>
 </div>
