@@ -11,7 +11,7 @@ categories:
   - "编程语言"
 tags:
   - "java"
-  - "面试题"
+  - "AI"
 draft: true
 ---
 

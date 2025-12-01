@@ -1,0 +1,37 @@
+{{ define "main" }}
+<main class="main list" role="main">
+	{{- with .Content }}
+	<div class="content main__content clearfix">
+		{{ . }}
+	</div>
+	{{- end }}
+
+	<section class="ai-quiz-section" data-ai-quiz-root
+		data-ai-quiz-endpoint="http://localhost:18080/api/v1/assistant/chat?mode=exam&amp;query=%22%22">
+		<h2 class="ai-quiz-title">AI 考题</h2>
+		<p class="ai-quiz-desc">点击下方按钮调用本地服务，自动生成新的考试题并追加到页面。</p>
+		<div class="ai-quiz-actions">
+			<button class="ai-quiz-button" data-ai-quiz-trigger>“AI 考题”继续生成</button>
+			<span class="ai-quiz-status" data-ai-quiz-status></span>
+		</div>
+		<div class="ai-quiz-results" data-ai-quiz-results></div>
+	</section>
+
+	{{- $allPages := .Site.RegularPages }}
+	{{- $paginator := .Paginate $allPages }}
+	{{- range $paginator.Pages }}
+	{{- .Render "summary" }}
+	{{- end }}
+	{{- if eq $paginator.TotalNumberOfElements 0 }}
+	<div class="warning">
+		<svg class="warning__icon icon icon-files" viewBox="0 0 384 384" width="96" height="96" fill="#ddd">
+			<path
+				d="m368 64h-224-16v16 288 16h16 224 16v-16-288-16zm-16 288h-192v-256h192zm-320-320h192v16h32v-32-16h-16-224-16v16 288 16h16 96v-32h-80zm144 272h160v-32h-160zm0-64h160v-32h-160zm0-64h160v-32h-160zm-128 64h64v-32h-64zm0-64h64v-32h-64zm0-64h64v-32h-64z" />
+		</svg>
+		<h3 class="warning__headline">You don't have any posts yet!</h3>
+		<p class="warning__text">Add any content under <b>content/</b> and it will appear here.</p>
+	</div>
+	{{ end }}
+</main>
+{{ partial "pagination.html" . }}
+{{ end }}

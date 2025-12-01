@@ -1,0 +1,19 @@
+{{- $questionId := .Get "id" | default (printf "quiz-%d" (now.Unix)) }}
+{{- $correct := .Get "correct" | default "" }}
+{{- $question := .Get "question" | default "" }}
+<div class="quiz-container" id="{{ $questionId }}">
+  <div class="quiz-question">
+    <h3 class="quiz-title">{{ $question }}</h3>
+  </div>
+  <div class="quiz-options">
+    {{ .Inner | markdownify }}
+  </div>
+  <div class="quiz-actions">
+    <button class="quiz-btn quiz-submit" data-quiz-id="{{ $questionId }}" data-correct="{{ $correct }}">提交答案</button>
+    <button class="quiz-btn quiz-show-answer" data-quiz-id="{{ $questionId }}" data-correct="{{ $correct }}">查看答案</button>
+    <button class="quiz-btn quiz-reset" data-quiz-id="{{ $questionId }}">重置</button>
+  </div>
+  <div class="quiz-result" id="{{ $questionId }}-result"></div>
+  <div class="quiz-explanation" id="{{ $questionId }}-explanation"></div>
+</div>
+
