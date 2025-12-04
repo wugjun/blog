@@ -7,12 +7,22 @@
     if (!sections.length) return;
 
     sections.forEach(section => {
-      const endpoint = section.getAttribute('data-ai-quiz-endpoint');
+      // 获取并解码 HTML 实体编码的 URL
+      let baseEndpoint = section.getAttribute('data-ai-quiz-endpoint');
+      if (baseEndpoint) {
+        // 解码 HTML 实体（如 &amp; -> &）
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = baseEndpoint;
+        baseEndpoint = tempDiv.textContent || tempDiv.innerText || baseEndpoint;
+      }
+
       const button = section.querySelector('[data-ai-quiz-trigger]');
       const statusEl = section.querySelector('[data-ai-quiz-status]');
       const resultsEl = section.querySelector('[data-ai-quiz-results]');
+      const difficultySelect = section.querySelector('[data-ai-quiz-param="difficulty"]');
+      const countSelect = section.querySelector('[data-ai-quiz-param="count"]');
 
-      if (!button || !endpoint || !resultsEl) return;
+      if (!button || !baseEndpoint || !resultsEl) return;
 
       initFloatingButton(button);
 
@@ -21,13 +31,29 @@
         setStatus(statusEl, '正在生成考题，请稍候…');
 
         try {
-          const payload = await requestQuiz(endpoint);
+          // 获取用户选择的难度和数量
+          const difficulty = difficultySelect ? difficultySelect.value : '中等';
+          const count = countSelect ? countSelect.value : '3';
+
+          // 构建完整的请求参数
+          const requestParams = {
+            mode: 'exam',
+            query: '',
+            difficulty: difficulty,
+            count: count
+          };
+
+          // 输出调试信息
+          console.log('[AI Quiz] 请求参数:', requestParams);
+          console.log('[AI Quiz] 基础 URL:', baseEndpoint);
+
+          const payload = await requestQuiz(baseEndpoint, requestParams);
           const content = payload?.data?.choices?.[0]?.message?.content;
           if (!content) {
             throw new Error('后端未返回考题内容');
           }
           appendQuizContent(resultsEl, content);
-          setStatus(statusEl, '生成成功，内容已追加。');
+          setStatus(statusEl, `生成成功，已生成 ${count} 道${difficulty}难度的题目。`);
         } catch (error) {
           console.error('[AI Quiz]', error);
           setStatus(statusEl, '生成失败：' + error.message);
@@ -112,19 +138,78 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  async function requestQuiz(endpoint) {
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-    if (!response.ok) {
-      throw new Error('服务返回错误状态：' + response.status);
+  function buildEndpointWithParams(baseEndpoint, difficulty, count) {
+    if (!baseEndpoint) {
+      throw new Error('基础 URL 不能为空');
     }
-    const payload = await response.json();
-    if (!payload.success) {
-      throw new Error(payload.message || '生成失败');
+
+    try {
+      // 清理 URL，移除可能的 HTML 标签或编码问题
+      let cleanUrl = baseEndpoint.trim();
+      // 移除 URL 中可能存在的 HTML 标签
+      cleanUrl = cleanUrl.replace(/<[^>]*>/g, '');
+      // 确保 URL 是完整的
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        throw new Error('URL 格式不正确');
+      }
+
+      const url = new URL(cleanUrl);
+      // 设置新参数，会覆盖同名参数
+      url.searchParams.set('difficulty', difficulty);
+      url.searchParams.set('count', count);
+      return url.toString();
+    } catch (e) {
+      console.error('[AI Quiz] URL 解析失败:', e, '原始 URL:', baseEndpoint);
+      // 如果 URL 解析失败，使用字符串拼接方式
+      let cleanUrl = baseEndpoint.trim().replace(/<[^>]*>/g, '');
+      const separator = cleanUrl.includes('?') ? '&' : '?';
+      // 移除末尾可能存在的无效字符
+      cleanUrl = cleanUrl.replace(/[<>"']/g, '');
+      return `${cleanUrl}${separator}difficulty=${encodeURIComponent(difficulty)}&count=${encodeURIComponent(count)}`;
     }
-    return payload;
+  }
+
+  async function requestQuiz(endpoint, params) {
+    // 清理并解析基础 URL
+    let cleanUrl = endpoint.trim();
+    cleanUrl = cleanUrl.replace(/<[^>]*>/g, '');
+
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      throw new Error('URL 格式不正确: ' + cleanUrl);
+    }
+
+    try {
+      const url = new URL(cleanUrl);
+      const baseUrl = url.origin + url.pathname;
+
+      // 构建请求体，所有参数都在 POST 请求体中
+      const requestBody = params || {};
+
+      console.log('[AI Quiz] POST 请求 URL:', baseUrl);
+      console.log('[AI Quiz] POST 请求体:', requestBody);
+
+      const response = await fetch(baseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error('服务返回错误状态：' + response.status);
+      }
+
+      const payload = await response.json();
+      if (!payload.success) {
+        throw new Error(payload.message || '生成失败');
+      }
+      return payload;
+    } catch (e) {
+      console.error('[AI Quiz] POST 请求失败:', e);
+      throw new Error('请求失败: ' + e.message);
+    }
   }
 
   function setStatus(el, text) {

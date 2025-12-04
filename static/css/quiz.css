@@ -4,7 +4,7 @@
   padding: 1.5em;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
-  background-color: #fafafa;
+  background-color: #f8f5f0; /* 与主题背景色一致 */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -29,16 +29,21 @@
   padding: 0.8em;
   border: 2px solid #ddd;
   border-radius: 6px;
-  background-color: #fff;
+  background-color: #f8f5f0; /* 与主题背景色一致 */
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: flex-start;
 }
 
+/* 隐藏 radio 按钮的圆圈 */
+.quiz-option input[type="radio"] {
+  display: none;
+}
+
 .quiz-option:hover {
   border-color: #3498db;
-  background-color: #f0f8ff;
+  background-color: #f5f2ed; /* 与主题背景色相近，稍深一点以提供悬停反馈 */
   transform: translateX(5px);
 }
 
@@ -205,6 +210,20 @@
   .quiz-btn {
     width: 100%;
   }
+
+  .ai-quiz-controls {
+    flex-direction: column;
+    gap: 1em;
+    padding: 1.2em;
+  }
+
+  .ai-quiz-control-group {
+    min-width: 100%;
+  }
+
+  .ai-quiz-select {
+    width: 100%;
+  }
 }
 
 /* AI Quiz section */
@@ -225,6 +244,103 @@
 .ai-quiz-desc {
   margin: 0.5em 0 1em 0;
   color: #555;
+}
+
+.ai-quiz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5em;
+  margin: 1.5em 0;
+  padding: 1.5em;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-quiz-controls::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #8e44ad, #3498db, #2ecc71);
+  opacity: 0.8;
+}
+
+.ai-quiz-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  flex: 1;
+  min-width: 150px;
+}
+
+.ai-quiz-control-group label {
+  font-weight: 600;
+  color: #2c3e50;
+  white-space: nowrap;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.ai-quiz-control-group label::before {
+  content: '⚙️';
+  font-size: 1em;
+}
+
+.ai-quiz-control-group:first-child label::before {
+  content: '📊';
+}
+
+.ai-quiz-control-group:last-child label::before {
+  content: '🔢';
+}
+
+.ai-quiz-select {
+  padding: 0.75em 1.25em;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  font-size: 1em;
+  font-weight: 500;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%233498db' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1em center;
+  background-size: 12px;
+  padding-right: 2.5em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ai-quiz-select:hover {
+  border-color: #3498db;
+  background: linear-gradient(to bottom, #ffffff, #f0f8ff);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.15);
+  transform: translateY(-1px);
+}
+
+.ai-quiz-select:focus {
+  outline: none;
+  border-color: #3498db;
+  background: linear-gradient(to bottom, #ffffff, #f0f8ff);
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15), 0 4px 12px rgba(52, 152, 219, 0.2);
+  transform: translateY(-1px);
+}
+
+.ai-quiz-select option {
+  padding: 0.5em;
+  background-color: #ffffff;
+  color: #2c3e50;
+  font-weight: 500;
 }
 
 .ai-quiz-actions {
@@ -287,7 +403,7 @@
 .ai-quiz-item {
   padding: 1.2em;
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: #f8f5f0; /* 与主题背景色一致 */
   border: 1px solid #e1e4e8;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }

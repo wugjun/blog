@@ -6,6 +6,11 @@ disqusShortname = "" # Enable comments by entering your Disqus shortname
 googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 disablePathToLower = true
 
+[languages.zh-cn]
+  languageCode = "zh-cn"
+  title = "补漏砖匠"
+  weight = 1
+
 [markup]
   [markup.goldmark]
     [markup.goldmark.renderer]
@@ -17,7 +22,7 @@ disablePathToLower = true
   highlightColor = "#3498db"
 [Params]
   subtitle = "独钓寒江雪，为有暗香来。" # Subtitle of your site. Used in site header
-  description = "Wu guo jun Personal blog about everything" # Site description. Used in meta description
+  description = "补漏砖匠" # Site description. Used in meta description
   #copyright = "John Doe" # copyright holder, otherwise will use site title
   #opengraph = false # Enable OpenGraph if true
   #twitter_cards = false # Enable Twitter Cards if true
@@ -26,7 +31,7 @@ disablePathToLower = true
   toc = true # Enable Table of Contents
   post_navigation = true # Show post navigation at bottom of pages if true
   post_meta = ["date", "categories"] # Order of post meta information. Use ["none"] to turn off completely.
-  postSections = ["post"] # the section pages to show on home page and the "Recent articles" widget
+  postSections = ["post","编程语言","工具效率","后端架构","开源文档","前端开发","算法数据结构","运维部署"] # the section pages to show on home page and the "Recent articles" widget
   #postSections = ["blog", "news"] # alternative that shows more than one section's pages
   #dateformat = "2006-01-02" # change the format of dates
   #mathjax = true # Enable MathJax
