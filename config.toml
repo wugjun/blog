@@ -1,6 +1,6 @@
 baseurl = "/"
 title = "补漏砖匠"
-languageCode = "en-us"
+languageCode = "zh-cn"
 theme = "mainroad"
 disqusShortname = "" # Enable comments by entering your Disqus shortname
 googleAnalytics = "" # Enable Google Analytics by entering your tracking id
