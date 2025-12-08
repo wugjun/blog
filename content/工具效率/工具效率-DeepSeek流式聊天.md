@@ -105,7 +105,7 @@ menu: main
   const chatContainer = document.getElementById('chat-container');
   const messageInput = document.getElementById('message-input');
   const sendBtn = document.getElementById('send-btn');
-  const endpoint = 'http://localhost:18080/api/v1/assistant/chat/stream';
+  const endpoint = 'http://qiaopan.tech:18080/api/v1/assistant/chat/stream';
   let currentController = null;
 
   function addUserMessage(content) {
