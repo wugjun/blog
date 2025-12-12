@@ -26,6 +26,11 @@
 
       initFloatingButton(button);
 
+      // 页面加载时尝试加载已保存的内容
+      loadQuizContent(baseEndpoint, resultsEl).catch(err => {
+        console.warn('[AI Quiz] 加载已保存内容失败:', err);
+      });
+
       button.addEventListener('click', async function () {
         button.disabled = true;
         setStatus(statusEl, '正在生成考题，请稍候…');
@@ -54,6 +59,14 @@
           }
           appendQuizContent(resultsEl, content);
           setStatus(statusEl, `生成成功，已生成 ${count} 道${difficulty}难度的题目。`);
+
+          // 自动保存生成的内容
+          try {
+            await saveQuizContent(baseEndpoint, content, { difficulty, count });
+            console.log('[AI Quiz] 内容已保存到服务器');
+          } catch (saveError) {
+            console.warn('[AI Quiz] 保存失败（不影响使用）:', saveError);
+          }
         } catch (error) {
           console.error('[AI Quiz]', error);
           setStatus(statusEl, '生成失败：' + error.message);
@@ -448,6 +461,96 @@
       return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
     } catch (error) {
       return String(value);
+    }
+  }
+
+  // 保存生成的 quiz 内容到服务器
+  async function saveQuizContent(baseEndpoint, content, metadata) {
+    try {
+      let url;
+      try {
+        url = new URL(baseEndpoint);
+      } catch (e) {
+        console.warn('[AI Quiz] 无法解析 baseEndpoint，跳过保存:', baseEndpoint);
+        return null;
+      }
+
+      const saveUrl = `${url.origin}${url.pathname}/save`;
+
+      const saveData = {
+        content: content,
+        metadata: {
+          difficulty: metadata.difficulty,
+          count: metadata.count,
+          timestamp: new Date().toISOString(),
+          pageUrl: window.location.href,
+          pageTitle: document.title
+        }
+      };
+
+      console.log('[AI Quiz] 保存内容到:', saveUrl);
+
+      const response = await fetch(saveUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(saveData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`保存失败: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('[AI Quiz] 保存失败:', error);
+      throw error;
+    }
+  }
+
+  // 从服务器加载已保存的 quiz 内容
+  async function loadQuizContent(baseEndpoint, resultsEl) {
+    try {
+      let url;
+      try {
+        url = new URL(baseEndpoint);
+      } catch (e) {
+        console.warn('[AI Quiz] 无法解析 baseEndpoint，跳过加载:', baseEndpoint);
+        return null;
+      }
+
+      const loadUrl = `${url.origin}${url.pathname}/load?pageUrl=${encodeURIComponent(window.location.href)}`;
+
+      console.log('[AI Quiz] 加载已保存内容:', loadUrl);
+
+      const response = await fetch(loadUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('[AI Quiz] 未找到已保存的内容');
+          return null;
+        }
+        throw new Error(`加载失败: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.success && result.data && result.data.content) {
+        console.log('[AI Quiz] 加载到已保存内容');
+        appendQuizContent(resultsEl, result.data.content);
+        return result.data;
+      }
+      return null;
+    } catch (error) {
+      console.warn('[AI Quiz] 加载已保存内容失败（不影响使用）:', error);
+      return null;
     }
   }
 })();

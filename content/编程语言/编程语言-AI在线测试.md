@@ -12,7 +12,9 @@ categories:
 tags:
   - "java"
   - "面试题"
-menu: main # Optional, add page to a menu. Options: main, side, footer
+menu: 
+  main:
+    weight: 8 # Optional, add page to a menu. Options: main, side, footer
 draft: true
 ---
 

@@ -11,7 +11,9 @@ categories:
 tags:
   - "AI"
   - "DeepSeek"
-menu: main
+menu: 
+  main:
+    weight: 10
 ---
 
 <div class="deepseek-chat-page">
