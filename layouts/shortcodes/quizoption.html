@@ -8,5 +8,5 @@
 {{- end }}
 <div class="quiz-option" data-value="{{ $value }}" data-explanation="{{ $explanation }}">
   <span class="quiz-option-label">{{ $value }}.</span>
-  <span class="quiz-option-text">{{ .Inner | markdownify }}</span>
+  <span class="quiz-option-text">{{ .Inner | markdownify | safeHTML}}</span>
 </div>

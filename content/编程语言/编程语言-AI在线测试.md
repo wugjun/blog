@@ -20,7 +20,7 @@ draft: true
 
 [◀ 返回](/编程语言/编程语言-剑法篇/)
 
-<section class="ai-quiz-section" data-ai-quiz-root data-ai-quiz-endpoint="http://qiaopan.tech:18080/api/v1/assistant/chat">
+<section class="ai-quiz-section" data-ai-quiz-root data-ai-quiz-endpoint="http://qiaopan.tech:18080/api/v1/assistant/">
   <h2 class="ai-quiz-title">即时生成 AI 考题</h2>
   <p class="ai-quiz-desc">点击按钮即可调用本地大模型接口，自动生成新的考试题并追加到页面。</p>
   <div class="ai-quiz-controls">

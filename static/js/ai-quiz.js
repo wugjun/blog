@@ -182,33 +182,52 @@
     }
   }
 
-  async function requestQuiz(endpoint, params) {
-    // 清理并解析基础 URL
-    let cleanUrl = endpoint.trim();
+  // 构建完整的 API URL
+  function buildApiUrl(baseEndpoint, endpoint) {
+    let cleanUrl = baseEndpoint.trim();
     cleanUrl = cleanUrl.replace(/<[^>]*>/g, '');
 
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
       throw new Error('URL 格式不正确: ' + cleanUrl);
     }
 
+    const url = new URL(cleanUrl);
+    // 确保 pathname 以 / 结尾，然后拼接 endpoint
+    let pathname = url.pathname;
+    if (!pathname.endsWith('/')) {
+      pathname += '/';
+    }
+    // 移除末尾的 /，然后拼接 endpoint
+    pathname = pathname.replace(/\/$/, '') + '/' + endpoint;
+    
+    return url.origin + pathname;
+  }
+
+  async function requestQuiz(endpoint, params) {
     try {
-      const url = new URL(cleanUrl);
-      const baseUrl = url.origin + url.pathname;
+      // 构建 chat 端点的完整 URL
+      const chatUrl = buildApiUrl(endpoint, 'chat');
 
       // 构建请求体，所有参数都在 POST 请求体中
       const requestBody = params || {};
 
-      console.log('[AI Quiz] POST 请求 URL:', baseUrl);
-      console.log('[AI Quiz] POST 请求体:', requestBody);
+      console.log('[AI Quiz] ====== 开始发送请求 ======');
+      console.log('[AI Quiz] 请求方法: POST');
+      console.log('[AI Quiz] 请求 URL:', chatUrl);
+      console.log('[AI Quiz] 请求体:', requestBody);
 
-      const response = await fetch(baseUrl, {
+      const fetchOptions = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify(requestBody)
-      });
+      };
+
+      console.log('[AI Quiz] Fetch 配置:', fetchOptions);
+
+      const response = await fetch(chatUrl, fetchOptions);
 
       if (!response.ok) {
         throw new Error('服务返回错误状态：' + response.status);
@@ -467,15 +486,8 @@
   // 保存生成的 quiz 内容到服务器
   async function saveQuizContent(baseEndpoint, content, metadata) {
     try {
-      let url;
-      try {
-        url = new URL(baseEndpoint);
-      } catch (e) {
-        console.warn('[AI Quiz] 无法解析 baseEndpoint，跳过保存:', baseEndpoint);
-        return null;
-      }
-
-      const saveUrl = `${url.origin}${url.pathname}/save`;
+      // 构建 save 端点的完整 URL
+      const saveUrl = buildApiUrl(baseEndpoint, 'save');
 
       const saveData = {
         content: content,
@@ -514,15 +526,8 @@
   // 从服务器加载已保存的 quiz 内容
   async function loadQuizContent(baseEndpoint, resultsEl) {
     try {
-      let url;
-      try {
-        url = new URL(baseEndpoint);
-      } catch (e) {
-        console.warn('[AI Quiz] 无法解析 baseEndpoint，跳过加载:', baseEndpoint);
-        return null;
-      }
-
-      const loadUrl = `${url.origin}${url.pathname}/load?pageUrl=${encodeURIComponent(window.location.href)}`;
+      // 构建 load 端点的完整 URL
+      const loadUrl = buildApiUrl(baseEndpoint, 'load') + '?pageUrl=' + encodeURIComponent(window.location.href);
 
       console.log('[AI Quiz] 加载已保存内容:', loadUrl);
 
