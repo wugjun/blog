@@ -6,6 +6,9 @@
     const sections = document.querySelectorAll('[data-ai-quiz-root]');
     if (!sections.length) return;
 
+    // 检测是否是主页，如果是主页则隐藏浮动按钮
+    const isHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+
     sections.forEach(section => {
       // 获取并解码 HTML 实体编码的 URL
       let baseEndpoint = section.getAttribute('data-ai-quiz-endpoint');
@@ -24,7 +27,16 @@
 
       if (!button || !baseEndpoint || !resultsEl) return;
 
-      initFloatingButton(button);
+      // 如果是主页，隐藏浮动按钮
+      if (isHomePage && button.classList.contains('ai-quiz-floating-button')) {
+        button.style.display = 'none';
+        return;
+      }
+
+      // 只在非主页页面初始化浮动按钮
+      if (button.classList.contains('ai-quiz-floating-button')) {
+        initFloatingButton(button);
+      }
 
       // 页面加载时尝试加载已保存的内容
       loadQuizContent(baseEndpoint, resultsEl).catch(err => {
@@ -199,7 +211,7 @@
     }
     // 移除末尾的 /，然后拼接 endpoint
     pathname = pathname.replace(/\/$/, '') + '/' + endpoint;
-    
+
     return url.origin + pathname;
   }
 

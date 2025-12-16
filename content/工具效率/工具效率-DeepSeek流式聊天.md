@@ -1,6 +1,6 @@
 ---
 title: "DeepSeek"
-date: 2025-12-03
+date: 2025-01-03
 description: "通过 DeepSeek 模型进行流式对话的在线工具"
 lead: "实时查看 AI 助手的流式响应"
 disable_comments: true
