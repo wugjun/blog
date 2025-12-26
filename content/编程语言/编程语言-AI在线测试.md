@@ -15,7 +15,7 @@ tags:
 menu: 
   main:
     weight: 8 # Optional, add page to a menu. Options: main, side, footer
-draft: true
+#draft: true
 ---
 
 [◀ 返回](/编程语言/编程语言-剑法篇/)

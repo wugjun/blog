@@ -23,9 +23,11 @@ WECHAT_CONFIG = {
     'appid': os.getenv('WECHAT_APPID', ''),
     'appsecret': os.getenv('WECHAT_APPSECRET', ''),
     'access_token_url': 'https://api.weixin.qq.com/cgi-bin/token',
-    'upload_url': 'https://api.weixin.qq.com/cgi-bin/media/upload',
-    'add_news_url': 'https://api.weixin.qq.com/cgi-bin/material/add_news',
-    'upload_img_url': 'https://api.weixin.qq.com/cgi-bin/media/uploadimg',
+    'upload_url': 'https://api.weixin.qq.com/cgi-bin/media/upload',  # 上传临时素材
+    'upload_img_url': 'https://api.weixin.qq.com/cgi-bin/media/uploadimg',  # 上传图片（用于图文消息）
+    'add_news_url': 'https://api.weixin.qq.com/cgi-bin/material/add_news',  # 新增永久图文素材
+    'add_draft_url': 'https://api.weixin.qq.com/cgi-bin/draft/add',  # 新增草稿
+    'upload_thumb_url': 'https://api.weixin.qq.com/cgi-bin/material/add_material',  # 上传永久素材（封面图）
 }
 
 class WeChatPublisher:
@@ -56,14 +58,35 @@ class WeChatPublisher:
                 print(f"✓ 成功获取Access Token")
                 return self.access_token
             else:
-                print(f"✗ 获取Access Token失败: {data}")
+                error_msg = data.get('errmsg', '未知错误')
+                error_code = data.get('errcode', '')
+                
+                # 处理常见的错误
+                if error_code == 40164:
+                    print(f"✗ 获取Access Token失败: IP地址不在白名单中")
+                    print(f"  错误代码: {error_code}")
+                    print(f"  错误信息: {error_msg}")
+                    print(f"\n解决方案:")
+                    print(f"  1. 登录微信公众平台: https://mp.weixin.qq.com")
+                    print(f"  2. 进入 开发 -> 基本配置 -> IP白名单")
+                    print(f"  3. 添加当前IP地址到白名单")
+                    print(f"  4. 或者使用服务器IP（如果通过服务器调用）")
+                elif error_code == 40013:
+                    print(f"✗ 获取Access Token失败: AppID无效")
+                    print(f"  请检查 WECHAT_APPID 是否正确")
+                elif error_code == 40125:
+                    print(f"✗ 获取Access Token失败: AppSecret无效")
+                    print(f"  请检查 WECHAT_APPSECRET 是否正确")
+                else:
+                    print(f"✗ 获取Access Token失败: {error_msg} (错误代码: {error_code})")
+                
                 return None
         except Exception as e:
             print(f"✗ 获取Access Token异常: {e}")
             return None
     
     def upload_image(self, image_path: str) -> Optional[str]:
-        """上传图片到微信公众号"""
+        """上传图片到微信公众号（用于图文消息内容）"""
         if image_path in self.uploaded_images:
             return self.uploaded_images[image_path]
         
@@ -86,10 +109,45 @@ class WeChatPublisher:
                     print(f"✓ 上传图片成功: {os.path.basename(image_path)}")
                     return image_url
                 else:
-                    print(f"✗ 上传图片失败: {data}")
+                    error_msg = data.get('errmsg', '未知错误')
+                    error_code = data.get('errcode', '')
+                    print(f"✗ 上传图片失败: {error_msg} (错误代码: {error_code})")
                     return None
         except Exception as e:
             print(f"✗ 上传图片异常: {e}")
+            return None
+    
+    def upload_thumb(self, image_path: str) -> Optional[str]:
+        """上传封面图（永久素材），返回media_id"""
+        access_token = self.get_access_token()
+        if not access_token:
+            return None
+        
+        url = f"{WECHAT_CONFIG['upload_thumb_url']}?access_token={access_token}&type=thumb"
+        
+        try:
+            # 检查文件大小（封面图限制1MB）
+            file_size = os.path.getsize(image_path)
+            if file_size > 1024 * 1024:  # 1MB
+                print(f"⚠️  警告: 封面图大小 {file_size/1024:.1f}KB，建议小于1MB")
+            
+            with open(image_path, 'rb') as f:
+                files = {'media': f}
+                response = requests.post(url, files=files, timeout=30)
+                response.raise_for_status()
+                data = response.json()
+                
+                if 'media_id' in data:
+                    media_id = data['media_id']
+                    print(f"✓ 上传封面图成功: {os.path.basename(image_path)} (media_id: {media_id[:20]}...)")
+                    return media_id
+                else:
+                    error_msg = data.get('errmsg', '未知错误')
+                    error_code = data.get('errcode', '')
+                    print(f"✗ 上传封面图失败: {error_msg} (错误代码: {error_code})")
+                    return None
+        except Exception as e:
+            print(f"✗ 上传封面图异常: {e}")
             return None
     
     def parse_front_matter(self, content: str) -> tuple:
@@ -193,23 +251,6 @@ class WeChatPublisher:
         # 转换为微信公众号HTML
         html_content = self.markdown_to_wechat_html(md_content, str(images_dir))
         
-        # 获取Access Token
-        access_token = self.get_access_token()
-        if not access_token:
-            print("✗ 无法获取Access Token，跳过发布")
-            return False
-        
-        # 构建图文消息
-        article = {
-            "title": title,
-            "thumb_media_id": "",  # 需要先上传封面图
-            "author": front_matter.get('author', ''),
-            "digest": description[:120],  # 摘要最多120字
-            "show_cover_pic": 1,
-            "content": html_content,
-            "content_source_url": "",  # 原文链接
-        }
-        
         # 如果是预览模式，只输出内容
         if not publish:
             print("\n" + "="*50)
@@ -221,16 +262,93 @@ class WeChatPublisher:
             print("\n提示: 使用 --publish 参数实际发布到微信公众号")
             return True
         
-        # 发布到微信公众号（需要先上传封面图）
-        # 注意：这里需要先上传封面图获取thumb_media_id
-        print("\n⚠️  发布功能需要:")
-        print("1. 上传封面图获取thumb_media_id")
-        print("2. 调用素材管理API发布图文消息")
-        print("3. 或者使用草稿箱功能")
+        # 发布到微信公众号
+        print("\n开始发布到微信公众号...")
         
-        # 这里只是示例，实际发布需要完整的实现
-        print(f"\n✓ 文章已准备就绪: {title}")
-        return True
+        # 1. 上传封面图
+        thumb_media_id = None
+        # 尝试从文章目录或images目录查找封面图
+        cover_image_paths = [
+            content_dir / 'cover.jpg',
+            content_dir / 'cover.png',
+            images_dir / f'{md_path.stem}.jpg',
+            images_dir / f'{md_path.stem}.png',
+            images_dir / 'cover.jpg',
+            images_dir / 'cover.png',
+        ]
+        
+        cover_image = None
+        for path in cover_image_paths:
+            if path.exists():
+                cover_image = str(path)
+                break
+        
+        if cover_image:
+            print(f"找到封面图: {cover_image}")
+            thumb_media_id = self.upload_thumb(cover_image)
+        else:
+            print("⚠️  未找到封面图，将使用默认封面")
+            # 可以提示用户上传封面图，或使用默认图片
+            print("提示: 在文章目录或content/images/目录放置cover.jpg或cover.png作为封面图")
+            # 这里可以选择：1. 使用默认封面 2. 跳过封面 3. 要求用户提供
+            use_default = input("是否继续发布（无封面图）? (y/N): ").strip().lower()
+            if use_default != 'y':
+                print("已取消发布")
+                return False
+        
+        if not thumb_media_id:
+            print("⚠️  警告: 未获取到封面图media_id，将尝试无封面发布")
+        
+        # 2. 构建图文消息
+        article_data = {
+            "articles": [{
+                "title": title,
+                "thumb_media_id": thumb_media_id or "",  # 封面图media_id
+                "author": front_matter.get('author', ''),
+                "digest": description[:120] if description else title[:120],  # 摘要最多120字
+                "show_cover_pic": 1 if thumb_media_id else 0,  # 是否显示封面
+                "content": html_content,
+                "content_source_url": "",  # 原文链接，可以设置为博客URL
+            }]
+        }
+        
+        # 3. 发布到素材库（永久素材）
+        access_token = self.get_access_token()
+        if not access_token:
+            return False
+        
+        url = f"{WECHAT_CONFIG['add_news_url']}?access_token={access_token}"
+        
+        try:
+            response = requests.post(url, json=article_data, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            
+            if 'media_id' in data:
+                media_id = data['media_id']
+                print(f"\n✓ 文章发布成功!")
+                print(f"  标题: {title}")
+                print(f"  Media ID: {media_id}")
+                print(f"\n下一步:")
+                print(f"  1. 登录微信公众平台: https://mp.weixin.qq.com")
+                print(f"  2. 进入 素材管理 -> 图文消息")
+                print(f"  3. 找到刚发布的文章，可以预览、编辑或群发")
+                return True
+            else:
+                error_msg = data.get('errmsg', '未知错误')
+                error_code = data.get('errcode', '')
+                print(f"\n✗ 发布失败: {error_msg} (错误代码: {error_code})")
+                
+                # 常见错误处理
+                if error_code == 40007:
+                    print("  提示: 可能是封面图media_id无效，请检查封面图")
+                elif error_code == 40008:
+                    print("  提示: 可能是文章内容格式不正确")
+                
+                return False
+        except Exception as e:
+            print(f"\n✗ 发布异常: {e}")
+            return False
 
 
 def main():

@@ -51,10 +51,45 @@ get_new_articles() {
         fi
         
         # 检查是否已发布
-        local file_hash=$(md5sum "$file" | cut -d' ' -f1)
         local file_path=$(realpath --relative-to="$BLOG_DIR" "$file")
         
-        if ! grep -q "\"$file_path\"" "$TRACKING_FILE" 2>/dev/null; then
+        # 使用Python检查JSON文件，更可靠
+        local is_tracked=$(python3 << EOF
+import json
+import sys
+import os
+
+file_path = "$file_path"
+tracking_file = "$TRACKING_FILE"
+
+try:
+    if not os.path.exists(tracking_file):
+        print("0")  # 文件不存在，视为未追踪
+        sys.exit(0)
+    
+    with open(tracking_file, 'r', encoding='utf-8') as f:
+        content = f.read().strip()
+        if not content or content == "[]":
+            print("0")  # 文件为空，视为未追踪
+            sys.exit(0)
+        
+        records = json.loads(content)
+    
+    # 检查文件路径是否在记录中
+    for record in records:
+        if record.get('path') == file_path:
+            print("1")  # 已追踪
+            sys.exit(0)
+    
+    print("0")  # 未追踪
+    sys.exit(0)
+except Exception as e:
+    print("0")  # 出错，视为未追踪
+    sys.exit(0)
+EOF
+)
+        
+        if [ "$is_tracked" = "0" ]; then
             new_articles+=("$file")
         fi
     done < <(find "$BLOG_DIR/content" -name "*.md" -type f -print0)
@@ -108,9 +143,109 @@ EOF
     rm "$temp_file"
 }
 
+# 初始化追踪文件（将现有非草稿文章标记为已发布，避免重复发布）
+init_tracking_file() {
+    echo -e "${YELLOW}初始化追踪文件...${NC}"
+    
+    local count=0
+    while IFS= read -r -d '' file; do
+        # 跳过draft文件
+        if grep -q "^draft: true" "$file" 2>/dev/null; then
+            continue
+        fi
+        
+        local file_path=$(realpath --relative-to="$BLOG_DIR" "$file")
+        local file_hash=$(md5sum "$file" | cut -d' ' -f1)
+        local timestamp=$(date -Iseconds)
+        
+        # 检查是否已存在
+        local exists=$(python3 << EOF
+import json
+import sys
+import os
+
+file_path = "$file_path"
+tracking_file = "$TRACKING_FILE"
+
+try:
+    if not os.path.exists(tracking_file):
+        print("0")
+        sys.exit(0)
+    
+    with open(tracking_file, 'r', encoding='utf-8') as f:
+        content = f.read().strip()
+        if not content or content == "[]":
+            print("0")
+            sys.exit(0)
+        
+        records = json.loads(content)
+    
+    for record in records:
+        if record.get('path') == file_path:
+            print("1")
+            sys.exit(0)
+    
+    print("0")
+    sys.exit(0)
+except Exception:
+    print("0")
+    sys.exit(0)
+EOF
+)
+        
+        if [ "$exists" != "1" ]; then
+            # 添加到追踪文件
+            python3 << EOF
+import json
+import os
+
+file_path = "$file_path"
+file_hash = "$file_hash"
+timestamp = "$timestamp"
+
+# 读取现有记录
+if os.path.exists("$TRACKING_FILE"):
+    with open("$TRACKING_FILE", 'r', encoding='utf-8') as f:
+        records = json.load(f)
+else:
+    records = []
+
+# 添加新记录
+records.append({
+    "path": file_path,
+    "hash": file_hash,
+    "published_at": timestamp,
+    "auto_init": True  # 标记为自动初始化
+})
+
+# 保存
+with open("$TRACKING_FILE", 'w', encoding='utf-8') as f:
+    json.dump(records, f, ensure_ascii=False, indent=2)
+EOF
+            count=$((count + 1))
+        fi
+    done < <(find "$BLOG_DIR/content" -name "*.md" -type f -print0)
+    
+    if [ $count -gt 0 ]; then
+        echo -e "${GREEN}✓ 已初始化 $count 篇现有文章到追踪文件${NC}"
+    else
+        echo -e "${YELLOW}所有文章已在追踪文件中${NC}"
+    fi
+}
+
 # 主函数
 main() {
     cd "$BLOG_DIR"
+    
+    # 如果追踪文件为空或不存在，先初始化
+    if [ ! -f "$TRACKING_FILE" ] || [ ! -s "$TRACKING_FILE" ] || [ "$(cat "$TRACKING_FILE")" = "[]" ]; then
+        echo -e "${YELLOW}追踪文件为空，是否初始化现有文章？${NC}"
+        echo -e "${YELLOW}（这将把所有非草稿文章标记为已发布，避免重复发布）${NC}"
+        read -p "初始化? (y/N): " init_confirm
+        if [ "$init_confirm" = "y" ] || [ "$init_confirm" = "Y" ]; then
+            init_tracking_file
+        fi
+    fi
     
     echo -e "${GREEN}开始检查新增文章...${NC}"
     

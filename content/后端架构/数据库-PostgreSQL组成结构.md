@@ -12,7 +12,7 @@ categories:
 tags:
   - "postgresql"
 
-draft: true
+#draft: true
 ---
 [◀ 返回](/后端架构/后端架构-兵法篇/)
 ## postgresql 的组成结构

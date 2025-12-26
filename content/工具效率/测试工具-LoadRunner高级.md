@@ -13,7 +13,7 @@ tags:
   - "测试"
   - "loadrunner" 
   - "C"
-draft: true
+#draft: true
 ---
 [◀ 返回](/工具效率/工具效率-法宝篇/)
 ### 创建脚本

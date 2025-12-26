@@ -8,6 +8,16 @@
    - **AppID** (应用ID)
    - **AppSecret** (应用密钥)
 
+4. **重要：配置IP白名单**
+   - 获取当前公网IP：
+     ```bash
+     ./scripts/get_current_ip.sh
+     # 或
+     curl https://api.ipify.org
+     ```
+   - 在 **开发 -> 基本配置 -> IP白名单** 中添加你的IP地址
+   - 如果不配置IP白名单，API调用会失败（错误代码：40164）
+
 ## 第二步：配置环境变量
 
 ### 本地使用
