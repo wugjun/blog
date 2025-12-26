@@ -25,8 +25,11 @@ WECHAT_CONFIG = {
     'access_token_url': 'https://api.weixin.qq.com/cgi-bin/token',
     'upload_url': 'https://api.weixin.qq.com/cgi-bin/media/upload',  # 上传临时素材
     'upload_img_url': 'https://api.weixin.qq.com/cgi-bin/media/uploadimg',  # 上传图片（用于图文消息）
-    'add_news_url': 'https://api.weixin.qq.com/cgi-bin/material/add_news',  # 新增永久图文素材
-    'add_draft_url': 'https://api.weixin.qq.com/cgi-bin/draft/add',  # 新增草稿
+    'add_draft_url': 'https://api.weixin.qq.com/cgi-bin/draft/add',  # 新增草稿（已替代永久图文素材）
+    'update_draft_url': 'https://api.weixin.qq.com/cgi-bin/draft/update',  # 更新草稿
+    'get_draft_url': 'https://api.weixin.qq.com/cgi-bin/draft/get',  # 获取草稿详情
+    'batchget_draft_url': 'https://api.weixin.qq.com/cgi-bin/draft/batchget',  # 获取草稿列表
+    'delete_draft_url': 'https://api.weixin.qq.com/cgi-bin/draft/delete',  # 删除草稿
     'upload_thumb_url': 'https://api.weixin.qq.com/cgi-bin/material/add_material',  # 上传永久素材（封面图）
 }
 
@@ -118,7 +121,7 @@ class WeChatPublisher:
             return None
     
     def upload_thumb(self, image_path: str) -> Optional[str]:
-        """上传封面图（永久素材），返回media_id"""
+        """上传封面图（永久素材），返回media_id（用于草稿箱）"""
         access_token = self.get_access_token()
         if not access_token:
             return None
@@ -244,6 +247,53 @@ class WeChatPublisher:
         title = front_matter.get('title', md_path.stem)
         description = front_matter.get('description', front_matter.get('lead', ''))
         
+        # 微信公众号标题限制：最多64个字符（中文字符按1个计算）
+        MAX_TITLE_LENGTH = 64
+        
+        # 清理标题：移除可能导致问题的字符
+        # 微信API可能对某些特殊字符敏感，如全角空格、特殊符号等
+        original_title = title
+        title = title.strip()  # 移除首尾空格
+        
+        # 移除所有换行符和回车符（标题不应该包含换行）
+        title = title.replace('\n', ' ')  # 换行符替换为空格
+        title = title.replace('\r', ' ')  # 回车符替换为空格
+        title = title.replace('\r\n', ' ')  # Windows换行符替换为空格
+        title = title.replace('\t', ' ')  # 制表符替换为空格
+        
+        # 替换可能导致问题的字符
+        title = title.replace('\u200b', '')  # 零宽空格
+        title = title.replace('\ufeff', '')  # BOM标记
+        title = title.replace('\u00a0', ' ')  # 不间断空格替换为普通空格
+        
+        # 预替换可能导致45003错误的特殊字符
+        # 微信API可能对某些全角符号有特殊限制
+        title = title.replace('·', '-')  # 中间点替换为连字符
+        title = title.replace('：', ':')  # 全角冒号替换为半角冒号
+        title = title.replace('—', '-')  # 全角破折号替换为连字符
+        title = title.replace('…', '...')  # 省略号替换为三个点
+        
+        # 清理多余的空格（多个连续空格替换为单个空格）
+        title = re.sub(r'\s+', ' ', title)  # 多个空白字符替换为单个空格
+        title = title.strip()  # 再次移除首尾空格
+        
+        # 检查长度并处理
+        if len(title) > MAX_TITLE_LENGTH:
+            print(f"⚠️  警告: 标题长度 {len(title)} 字符，超过限制 {MAX_TITLE_LENGTH} 字符")
+            print(f"  原标题: {original_title}")
+            title = title[:MAX_TITLE_LENGTH]
+            print(f"  已截断为: {title} ({len(title)} 字符)")
+        
+        # 检查标题是否为空
+        if not title or not title.strip():
+            print("✗ 错误: 标题为空，无法发布")
+            return False
+        
+        # 微信公众号摘要限制：最多120个字符
+        MAX_DIGEST_LENGTH = 120
+        if description and len(description) > MAX_DIGEST_LENGTH:
+            description = description[:MAX_DIGEST_LENGTH]
+        
         # 确定图片基础目录
         content_dir = md_path.parent
         images_dir = content_dir.parent / 'images'
@@ -287,40 +337,60 @@ class WeChatPublisher:
             print(f"找到封面图: {cover_image}")
             thumb_media_id = self.upload_thumb(cover_image)
         else:
-            print("⚠️  未找到封面图，将使用默认封面")
-            # 可以提示用户上传封面图，或使用默认图片
-            print("提示: 在文章目录或content/images/目录放置cover.jpg或cover.png作为封面图")
-            # 这里可以选择：1. 使用默认封面 2. 跳过封面 3. 要求用户提供
-            use_default = input("是否继续发布（无封面图）? (y/N): ").strip().lower()
+            print("⚠️  未找到封面图")
+            print("提示: 在以下位置放置封面图:")
+            print("  - content/文章目录/cover.jpg 或 cover.png")
+            print("  - content/images/文章名.jpg 或 文章名.png")
+            print("  - content/images/cover.jpg 或 cover.png")
+            print("\n注意: 草稿箱接口要求必须提供封面图")
+            use_default = input("是否继续查找封面图? (y/N): ").strip().lower()
             if use_default != 'y':
                 print("已取消发布")
                 return False
+            # 可以再次尝试查找
+            for path in cover_image_paths:
+                if path.exists():
+                    cover_image = str(path)
+                    print(f"找到封面图: {cover_image}")
+                    thumb_media_id = self.upload_thumb(cover_image)
+                    break
         
         if not thumb_media_id:
-            print("⚠️  警告: 未获取到封面图media_id，将尝试无封面发布")
+            print("\n✗ 发布失败: 未获取到封面图media_id")
+            print("  草稿箱接口要求必须提供封面图，请添加封面图后重试")
+            return False
         
-        # 2. 构建图文消息
+        # 2. 构建图文消息（草稿箱格式）
+        # 注意：草稿箱接口要求必须有封面图
         article_data = {
             "articles": [{
-                "title": title,
-                "thumb_media_id": thumb_media_id or "",  # 封面图media_id
-                "author": front_matter.get('author', ''),
+                "title": title,  # 使用清理后的标题
+                "thumb_media_id": thumb_media_id,  # 封面图media_id（必需）
+                "author": front_matter.get('author', '补漏砖匠'),
                 "digest": description[:120] if description else title[:120],  # 摘要最多120字
-                "show_cover_pic": 1 if thumb_media_id else 0,  # 是否显示封面
+                "show_cover_pic": 1,  # 是否显示封面
                 "content": html_content,
                 "content_source_url": "",  # 原文链接，可以设置为博客URL
             }]
         }
         
-        # 3. 发布到素材库（永久素材）
+        # 3. 发布到草稿箱（替代已下线的永久图文素材）
         access_token = self.get_access_token()
         if not access_token:
             return False
         
-        url = f"{WECHAT_CONFIG['add_news_url']}?access_token={access_token}"
+        print(f"  标题: {title}")
+        url = f"{WECHAT_CONFIG['add_draft_url']}?access_token={access_token}"
         
         try:
-            response = requests.post(url, json=article_data, timeout=30)
+            # 手动序列化JSON，确保中文字符不被转义为Unicode转义序列
+            # 使用 ensure_ascii=False 保持中文字符原样
+            json_data = json.dumps(article_data, ensure_ascii=False, indent=None)
+            headers = {
+                'Content-Type': 'application/json; charset=utf-8'
+            }
+            # 使用 data 参数而不是 json 参数，手动控制编码
+            response = requests.post(url, data=json_data.encode('utf-8'), headers=headers, timeout=30)
             response.raise_for_status()
             data = response.json()
             
@@ -331,8 +401,9 @@ class WeChatPublisher:
                 print(f"  Media ID: {media_id}")
                 print(f"\n下一步:")
                 print(f"  1. 登录微信公众平台: https://mp.weixin.qq.com")
-                print(f"  2. 进入 素材管理 -> 图文消息")
-                print(f"  3. 找到刚发布的文章，可以预览、编辑或群发")
+                print(f"  2. 进入 内容与互动 -> 草稿箱")
+                print(f"  3. 找到刚发布的文章，可以预览、编辑或发布")
+                print(f"  4. 发布后可以获取文章链接或群发给粉丝")
                 return True
             else:
                 error_msg = data.get('errmsg', '未知错误')
@@ -341,13 +412,29 @@ class WeChatPublisher:
                 
                 # 常见错误处理
                 if error_code == 40007:
-                    print("  提示: 可能是封面图media_id无效，请检查封面图")
+                    print("  提示: 封面图media_id无效，请检查封面图是否正确上传")
                 elif error_code == 40008:
-                    print("  提示: 可能是文章内容格式不正确")
+                    print("  提示: 文章内容格式不正确，请检查HTML格式")
+                elif error_code == 45003:
+                    print("  提示: 标题长度超过限制或包含不允许的字符")
+                    print(f"  当前标题: {title}")
+                    print(f"  标题长度: {len(title)} 字符")
+                    print(f"  标题字节数: {len(title.encode('utf-8'))} 字节")
+                    print("  建议:")
+                    print("    1. 确保标题不超过64个字符")
+                    print("    2. 检查标题中是否包含特殊字符（如全角空格、零宽字符等）")
+                    print("    3. 尝试简化标题，移除特殊符号（如：·、：等）")
+                    print("    4. 可以尝试将标题中的特殊符号替换为普通字符")
+                elif error_code == 45009:
+                    print("  提示: 接口调用超过限制，请稍后再试")
+                elif error_code == 40164:
+                    print("  提示: IP地址不在白名单中，请配置IP白名单")
                 
                 return False
         except Exception as e:
             print(f"\n✗ 发布异常: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
 
