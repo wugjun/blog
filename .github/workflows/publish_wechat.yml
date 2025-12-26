@@ -1,0 +1,65 @@
+name: Publish to WeChat
+
+on:
+  push:
+    branches: ["master"]
+    paths:
+      - 'content/**/*.md'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: '是否实际发布到微信公众号'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout blog source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd scripts
+          pip install -r requirements.txt
+
+      - name: Publish to WeChat (Preview)
+        if: github.event.inputs.publish != 'true'
+        env:
+          WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
+          WECHAT_APPSECRET: ${{ secrets.WECHAT_APPSECRET }}
+        run: |
+          cd scripts
+          chmod +x publish_new_articles.sh
+          ./publish_new_articles.sh || true
+
+      - name: Publish to WeChat (Actual)
+        if: github.event.inputs.publish == 'true'
+        env:
+          WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
+          WECHAT_APPSECRET: ${{ secrets.WECHAT_APPSECRET }}
+        run: |
+          cd scripts
+          chmod +x publish_new_articles.sh
+          ./publish_new_articles.sh --publish || true
+
+      - name: Upload published articles log
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: published-articles
+          path: scripts/published_articles.json
+
