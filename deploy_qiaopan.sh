@@ -30,9 +30,29 @@ generate_version() {
     echo "v$(date '+%Y%m%d-%H%M%S')"
 }
 
-# 主函数
+# 主函数（使用 sshpass 和 DEPLOY_SERVER_PASSWORD 环境变量传递密码）
 main() {
     echo -e "${GREEN}开始部署到 qiaopan.tech...${NC}"
+    
+    # 检查部署密码环境变量
+    if [ -z "$DEPLOY_SERVER_PASSWORD" ]; then
+        echo -e "${RED}错误: 未设置环境变量 DEPLOY_SERVER_PASSWORD！${NC}"
+        echo -e "${YELLOW}提示: 请先设置环境变量，例如: export DEPLOY_SERVER_PASSWORD='your_password'${NC}"
+        exit 1
+    fi
+
+    # 确保 sshpass 已安装
+    if ! command -v sshpass >/dev/null 2>&1; then
+        echo -e "${RED}未找到 sshpass，请先安装！${NC}"
+        echo -e "${YELLOW}安装方法:${NC}"
+        echo -e "  macOS: brew install hudochenkov/sshpass/sshpass"
+        echo -e "  Ubuntu/Debian: sudo apt-get install sshpass"
+        echo -e "  CentOS/RHEL: sudo yum install sshpass"
+        exit 1
+    fi
+
+    # 导出密码到环境变量供 sshpass -e 使用
+    export SSHPASS="$DEPLOY_SERVER_PASSWORD"
     
     # 1. 构建 Hugo 站点
     echo -e "${YELLOW}步骤 1/4: 构建 Hugo 站点 (使用 --minify)${NC}"
@@ -59,12 +79,12 @@ main() {
     echo -e "${YELLOW}步骤 2/4: 生成部署版本号${NC}"
     echo -e "${GREEN}版本号: $VERSION${NC}"
     
-    # 4. 部署到远程服务器
+    # 4. 部署到远程服务器（使用 sshpass 从环境变量读取密码）
     echo -e "${YELLOW}步骤 3/4: 部署到远程服务器${NC}"
     echo -e "目标: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
     
-    # 使用 rsync 同步文件（推荐方式，支持增量更新）
-    rsync -avz --delete \
+    # 使用 rsync 同步文件（通过 sshpass 从环境变量读取密码）
+    sshpass -e rsync -avz --delete \
         --exclude='.git' \
         --exclude='.DS_Store' \
         "$LOCAL_PUBLIC_DIR/" \
@@ -72,15 +92,16 @@ main() {
     
     if [ $? -ne 0 ]; then
         echo -e "${RED}rsync 同步失败！${NC}"
-        echo -e "${YELLOW}提示: 请确保已配置 SSH 密钥认证或准备好密码${NC}"
+        echo -e "${YELLOW}提示: 请确保 sshpass 已安装，且 DEPLOY_SERVER_PASSWORD 环境变量设置正确${NC}"
         exit 1
     fi
     
     echo -e "${GREEN}✓ 文件同步完成${NC}"
     
-    # 5. 在远程服务器创建版本标记文件
+    # 5. 在远程服务器创建版本标记文件（使用 sshpass 从环境变量读取密码）
     echo -e "${YELLOW}步骤 4/4: 创建版本标记${NC}"
-    ssh "${REMOTE_USER}@${REMOTE_HOST}" "echo '$VERSION' > ${REMOTE_PATH}/.deploy_version && echo '$(date)' >> ${REMOTE_PATH}/.deploy_version"
+    sshpass -e ssh -o StrictHostKeyChecking=no "${REMOTE_USER}@${REMOTE_HOST}" \
+        "echo '$VERSION' > ${REMOTE_PATH}/.deploy_version && echo '$(date)' >> ${REMOTE_PATH}/.deploy_version"
     
     # 6. 记录部署日志
     log_deploy "$VERSION"
@@ -133,9 +154,14 @@ show_usage() {
     echo ""
     echo "提示:"
     echo "  - 默认不包含草稿内容，使用 -D 参数可包含草稿"
-    echo "  - 确保已配置 SSH 密钥认证"
+    echo "  - 需要设置环境变量 DEPLOY_SERVER_PASSWORD"
+    echo "  - 需要安装 sshpass 工具"
     echo "  - 确保远程服务器目录存在且有写权限"
     echo "  - 部署历史记录在: $DEPLOY_LOG"
+    echo ""
+    echo "环境变量设置:"
+    echo "  export DEPLOY_SERVER_PASSWORD='your_password'"
+    echo "  $0              # 然后运行部署脚本"
     echo ""
     echo "示例:"
     echo "  $0              # 正常部署（不包含草稿）"
