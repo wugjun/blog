@@ -1,6 +1,6 @@
 ---
 title: "Ngrok 内网穿透部署指南"
-date: 2023-08-21
+date: 2025-12-30
 description: "基于自建服务器的Ngrok内网穿透完整部署方案"
 lead: "自建内网穿透隧道，安全高效实现公网访问"
 categories:
@@ -13,273 +13,423 @@ toc: false
 mathjax: false
 ---
 
-## 🎯 场景概述
+# Ngrok 内网穿透部署方案
 
-实现基于自建服务器的 Ngrok 公网转发访问，将本地服务安全暴露到公网环境。
+## 📦 项目地址
 
----
+**代码仓库：** `git@github.com:blowizer/ngrok.git`
+
+```bash
+git clone git@github.com:blowizer/ngrok.git
+cd ngrok
+```
+
+## 🎯 场景使用
+
+实现 ngrok 公网转发访问，用于内网穿透，将本地服务暴露到公网。
 
 ## 🖥️ 服务器环境准备
 
-### 系统要求
-- **操作系统**: Ubuntu 16.04+ / CentOS 7+
-- **内存**: 至少 1GB
-- **存储**: 至少 10GB 可用空间
-- **网络**: 公网 IP，开放所需端口
-
-### Ubuntu 环境依赖安装
+### 1. Ubuntu 系统依赖安装
 
 ```bash
-# 更新系统包
-apt-get update
-
-# 安装必要依赖
-apt-get -y install zlib-devel openssl-devel perl hg cpio expat-devel \
-                   gettext-devel curl curl-devel perl-ExtUtils-MakeMaker \
-                   hg wget gcc gcc-c++ git
+apt-get -y install zlib-devel openssl-devel perl hg cpio expat-devel gettext-devel curl curl-devel perl-ExtUtils-MakeMaker hg wget gcc gcc-c++ git
 ```
 
----
+### 2. Go 语言环境安装
 
-## ⚙️ Go 语言环境配置
+**推荐版本：** `go version go1.16.3 linux/amd64`
 
-### 清理旧版本 Golang
 ```bash
-# 删除现有golang依赖包
-rpm -qa | grep golang | xargs rpm -e 2>/dev/null || true
-```
+# 删除旧版本 golang 依赖包（如果存在）
+rpm -qa|grep golang|xargs rpm -e
 
-### 安装 Go 1.16.3
-```bash
 # 下载安装包
 wget https://golang.org/dl/go1.16.3.linux-amd64.tar.gz
-
-# 解压到系统目录
 tar -C /usr/local -xzf go1.16.3.linux-amd64.tar.gz
 
 # 配置环境变量
-cat >> /etc/profile << 'EOF'
-# Go Language Environment
-export GOROOT=/usr/local/go
-export PATH=$PATH:$GOROOT/bin
-export GOPATH=/home/go
-EOF
+vim /etc/profile
+# 在文件末尾添加以下内容：
+# #go lang
+# export GOROOT=/usr/local/go
+# export PATH=$PATH:$GOROOT/bin
 
-# 加载环境变量
+# 使配置生效
 source /etc/profile
 
-# 验证安装
+# 检测是否安装成功
 go version
 ```
-**预期输出**: `go version go1.16.3 linux/amd64`
 
----
+### 3. 防火墙端口配置
 
-## 🔒 防火墙端口配置
-
-### 开放必要端口
 ```bash
-# 编辑iptables配置
 vim /etc/sysconfig/iptables
+# 添加以下内容：
+# -A INPUT -m state --state NEW -m tcp -p tcp --dport 4443 -j ACCEPT
+# -A INPUT -m state --state NEW -m tcp -p tcp --dport 8080 -j ACCEPT
+# -A INPUT -m state --state NEW -m tcp -p tcp --dport 8081 -j ACCEPT
+# -A INPUT -m state --state NEW -m tcp -p tcp --dport 2222 -j ACCEPT
 
-# 添加以下内容到INPUT链：
--A INPUT -m state --state NEW -m tcp -p tcp --dport 50123 -j ACCEPT
--A INPUT -m state --state NEW -m tcp -p tcp --dport 4443 -j ACCEPT
-```
-
-### 应用防火墙规则
-```bash
-# 重新加载配置
+# 重新加载防火墙规则
 /etc/init.d/iptables reload
 /etc/init.d/iptables restart
 
-# 验证端口开放状态
+# 查看开放的端口
 iptables -nL
 ```
 
-**端口说明**:
-- `4443`: Ngrok 客户端连接端口
-- `50123`: 自定义隧道服务端口
+**注意：** 如果使用云服务器（如阿里云），还需要在安全组中开放相应端口。
+
+## 🚀 快速部署
+
+### 一键部署（推荐）
+
+在服务端执行：
+
+```bash
+chmod +x deploy-ngrok-full.sh
+sudo ./deploy-ngrok-full.sh
+```
+
+该脚本会自动执行以下步骤：
+1. 生成证书
+2. 编译 Ngrok
+3. 配置系统服务
+4. 配置客户端
+
+## 📝 脚本详细说明
+
+### 1. `deploy-ngrok-full.sh` - 一键部署脚本
+
+**功能：** 自动化执行完整的 Ngrok 部署流程
+
+**操作步骤：**
+```bash
+chmod +x deploy-ngrok-full.sh
+sudo ./deploy-ngrok-full.sh
+```
+
+**执行内容：**
+- 自动调用 `setup-ngrok-cert.sh` 生成证书
+- 自动调用 `build-ngrok.sh` 编译服务端和客户端
+- 自动调用 `setup-ngrok-service.sh` 配置系统服务
+- 自动调用 `setup-ngrok-client.sh` 配置客户端
+
+**部署完成后的后续操作：**
+1. 阿里云安全组开放端口: 4443, 2222
+2. 将客户端文件复制到本地机器
+3. 在本地运行客户端启动脚本
+4. 测试 SSH 连接
 
 ---
 
-## 🚀 一键部署方案
+### 2. `setup-ngrok-cert.sh` - 证书生成脚本
 
-### 完整自动化部署
-[获取代码](https://github.com/blowizer/ngrok) 
+**功能：** 生成自签名的根证书和服务器证书（包含 SAN 扩展）
+
+**操作步骤：**
 ```bash
-# 执行一键部署脚本
-./deploy-ngrok-full.sh
+chmod +x setup-ngrok-cert.sh
+sudo ./setup-ngrok-cert.sh
 ```
 
-### 分步部署（推荐用于生产环境）
+**执行内容：**
+1. 清理旧证书文件
+2. 生成根证书（rootCA.key, rootCA.pem）
+3. 生成服务器密钥（server.key）
+4. 创建包含 SAN 的配置文件
+5. 生成证书请求（server.csr）
+6. 生成 SAN 证书（server.crt）
+7. 验证证书链和 SAN 扩展
 
-#### 步骤 1: 生成 SSL 证书
+**证书位置：** `/usr/local/ngrok/cert/`
+
+**验证内容：**
+- ✅ 根证书是自签名的
+- ✅ 服务器证书由根证书签发
+- ✅ 证书链验证通过
+- ✅ SAN 扩展正确配置
+
+---
+
+### 3. `sync-ngrok-certs.sh` - 证书同步脚本
+
+**功能：** 将生成的证书同步到 Ngrok 的 assets 目录
+
+**操作步骤：**
 ```bash
-echo "生成Ngrok服务端证书..."
-sudo chmod +x /usr/local/bin/setup-ngrok-cert.sh
-sudo /usr/local/bin/setup-ngrok-cert.sh
+chmod +x sync-ngrok-certs.sh
+sudo ./sync-ngrok-certs.sh
 ```
 
-#### 步骤 2: 同步证书文件
+**执行内容：**
+1. 比较证书 MD5 值
+2. 同步证书到以下位置：
+   - `server.crt` → `/usr/local/ngrok/assets/server/tls/snakeoil.crt`
+   - `server.key` → `/usr/local/ngrok/assets/server/tls/snakeoil.key`
+   - `rootCA.pem` → `/usr/local/ngrok/assets/client/tls/ngrokroot.crt`
+3. 验证同步后的证书链
+4. 测试服务端 TLS 握手
+5. 重启 ngrokd 服务
+
+**使用场景：** 证书更新后需要同步到 Ngrok 目录
+
+---
+
+### 4. `build-ngrok.sh` - 编译脚本
+
+**功能：** 编译 Ngrok 服务端和客户端（支持多平台）
+
+**操作步骤：**
 ```bash
-echo "同步证书到Ngrok编译目录..."
-sudo chmod +x /usr/local/bin/sync-ngrok-certs.sh  
-sudo /usr/local/bin/sync-ngrok-certs.sh 
+chmod +x build-ngrok.sh
+sudo ./build-ngrok.sh
 ```
 
-#### 步骤 3: 编译 Ngrok 服务
+**执行内容：**
+1. 编译 Linux 服务端（ngrokd）
+2. 编译 Windows 客户端（amd64）
+3. 编译 Linux 客户端（amd64）
+4. 编译 macOS 客户端（darwin amd64）
+
+**编译输出位置：** `/usr/local/ngrok/bin/`
+
+**生成文件：**
+- `linux_amd64/ngrokd` - Linux 服务端
+- `windows_amd64/ngrok.exe` - Windows 客户端
+- `linux_amd64/ngrok` - Linux 客户端
+- `darwin_amd64/ngrok` - macOS 客户端
+
+---
+
+### 5. `setup-ngrok-service.sh` - 系统服务配置脚本
+
+**功能：** 配置 Ngrok 服务端为 systemd 系统服务
+
+**操作步骤：**
 ```bash
-echo "编译Ngrok服务端和客户端..."
-sudo chmod +x /usr/local/bin/build-ngrok.sh  
-sudo /usr/local/bin/build-ngrok.sh
+chmod +x setup-ngrok-service.sh
+sudo ./setup-ngrok-service.sh
 ```
 
-#### 步骤 4: 配置系统服务
-```bash
-echo "配置Ngrok系统服务..."
-sudo chmod +x /usr/local/bin/setup-ngrok-service.sh
-sudo /usr/local/bin/setup-ngrok-service.sh
-```
+**执行内容：**
+1. 停止现有 ngrokd 服务
+2. 创建 systemd 服务文件（`/etc/systemd/system/ngrokd.service`）
+3. 重新加载 systemd
+4. 启用并启动 ngrokd 服务
+5. 检查服务状态
 
-#### 步骤 5: 生成客户端配置
+**服务配置：**
+- 域名：`ngrok.qiaopan.tech`
+- TLS 隧道端口：`4443`
+- HTTP 端口：`8080`
+- HTTPS 端口：`8081`
+
+**常用命令：**
 ```bash
-echo "生成客户端配置文件..."
-sudo chmod +x /usr/local/bin/setup-ngrok-client.sh
-/usr/local/bin/setup-ngrok-client.sh
+sudo systemctl status ngrokd    # 查看状态
+sudo systemctl restart ngrokd   # 重启服务
+sudo systemctl stop ngrokd      # 停止服务
+sudo systemctl start ngrokd     # 启动服务
+sudo journalctl -u ngrokd -f    # 查看日志
 ```
 
 ---
 
-## 🔧 服务管理
+### 6. `setup-ngrok-client.sh` - 客户端配置脚本
 
-### 启动 Ngrok 服务
+**功能：** 在本地机器配置 Ngrok 客户端
+
+**操作步骤：**
 ```bash
-systemctl start ngrokd
+chmod +x setup-ngrok-client.sh
+./setup-ngrok-client.sh
 ```
 
-### 设置开机自启
+**执行内容：**
+1. 自动识别操作系统（macOS 或 Linux）
+2. 创建客户端目录（`~/ngrok-client`）
+3. 生成客户端配置文件（`ngrok.cfg`）
+4. 创建客户端启动脚本（`start-ngrok-client.sh`）
+
+**配置文件内容：**
+- 服务器地址：`ngrok.qiaopan.tech:4443`
+- 隧道类型：TCP
+- 本地端口：22（SSH）
+- 远程端口：2222
+
+**使用步骤：**
+1. 从服务器复制客户端文件到本地：
+   ```bash
+   # macOS
+   scp root@服务器IP:/usr/local/ngrok/bin/darwin_amd64/ngrok ~/ngrok-client/
+   
+   # Linux
+   scp root@服务器IP:/usr/local/ngrok/bin/linux_amd64/ngrok ~/ngrok-client/
+   ```
+2. 运行启动脚本：
+   ```bash
+   cd ~/ngrok-client
+   ./start-ngrok-client.sh
+   ```
+3. 查看日志：
+   ```bash
+   tail -f ~/ngrok-client/ngrok-client.log
+   ```
+
+---
+
+### 7. `start-ngrok-client.sh` - 客户端启动脚本
+
+**功能：** 启动 Ngrok 客户端并建立隧道
+
+**操作步骤：**
 ```bash
-systemctl enable ngrokd
+cd ~/ngrok-client
+chmod +x start-ngrok-client.sh
+./start-ngrok-client.sh
 ```
 
-### 查看服务状态
-```bash
-systemctl status ngrokd
-```
+**执行内容：**
+- 以后台方式启动 ngrok 客户端
+- 使用 debug 日志级别
+- 日志输出到 `ngrok-client.log`
 
-### 查看服务日志
+**查看运行状态：**
 ```bash
-journalctl -u ngrokd -f
+# 查看日志
+tail -f ~/ngrok-client/ngrok-client.log
+
+# 查看进程
+ps aux | grep ngrok
 ```
 
 ---
 
-## 📱 客户端配置
+### 8. `verfiy_cert.sh` - 证书验证脚本
 
-### 获取客户端文件
-部署完成后，在以下位置获取客户端文件：
-- **Linux 客户端**: `/usr/local/ngrok/bin/ngrok`
-- **Windows 客户端**: `/usr/local/ngrok/bin/windows_amd64/ngrok.exe`
-- **配置文件**: `/usr/local/ngrok/ngrok.cfg`
+**功能：** 验证证书是否正确配置
 
-### 客户端配置文件示例
+**操作步骤：**
+```bash
+chmod +x verfiy_cert.sh
+sudo ./verfiy_cert.sh
+```
+
+**执行内容：**
+1. 验证证书是否为自签名证书
+2. 测试服务端 TLS 握手
+3. 检查服务端日志
+
+**使用场景：** 证书配置出现问题时的诊断工具
+
+---
+
+### 9. `diagnose-connection.sh` - 连接诊断脚本
+
+**功能：** 诊断客户端连接问题
+
+**操作步骤：**
+```bash
+chmod +x diagnose-connection.sh
+./diagnose-connection.sh
+```
+
+**执行内容：**
+1. 测试 DNS 解析
+2. 测试网络连通性（ping）
+3. 测试端口连通性（telnet, nc）
+4. 检查本地证书
+5. 测试 TCP 连接
+6. 检查路由跟踪
+
+**使用场景：** 客户端无法连接到服务器时的故障排查
+
+---
+
+## 🔧 分步骤部署（手动执行）
+
+如果需要分步骤执行，可以按以下顺序：
+
+```bash
+# 步骤1: 生成证书
+chmod +x setup-ngrok-cert.sh
+sudo ./setup-ngrok-cert.sh
+
+# 步骤2: 同步证书到 Ngrok 目录
+chmod +x sync-ngrok-certs.sh
+sudo ./sync-ngrok-certs.sh
+
+# 步骤3: 编译 Ngrok
+chmod +x build-ngrok.sh
+sudo ./build-ngrok.sh
+
+# 步骤4: 配置系统服务
+chmod +x setup-ngrok-service.sh
+sudo ./setup-ngrok-service.sh
+
+# 步骤5: 配置客户端（在本地机器执行）
+chmod +x setup-ngrok-client.sh
+./setup-ngrok-client.sh
+```
+
+---
+
+## 📋 使用示例
+
+### SSH 隧道示例
+
+1. **服务端已部署完成**
+
+2. **客户端配置和启动：**
+   ```bash
+   # 在本地机器执行
+   cd ~/ngrok-client
+   ./start-ngrok-client.sh
+   ```
+
+3. **测试 SSH 连接：**
+   ```bash
+   ssh -p 2222 用户名@ngrok.qiaopan.tech
+   ```
+
+### 其他服务隧道配置
+
+修改 `~/ngrok-client/ngrok.cfg` 文件可以添加其他隧道：
+
 ```yaml
-server_addr: "your-server-domain.com:4443"
+server_addr: "ngrok.qiaopan.tech:4443"
 trust_host_root_certs: false
 tunnels:
-  web:
-    proto:
-      http: 80
-    subdomain: "test"
   ssh:
     proto:
       tcp: 22
-    remote_port: 50022
-```
-
-### 客户端使用
-```bash
-# 启动HTTP隧道
-./ngrok -config=ngrok.cfg start web
-
-# 启动TCP隧道  
-./ngrok -config=ngrok.cfg start ssh
+    remote_port: 2222
+  web:
+    proto:
+      http: 8080
+    subdomain: myapp
 ```
 
 ---
 
-## 🧪 验证部署
+## ⚠️ 注意事项
 
-### 服务端验证
-```bash
-# 检查服务监听状态
-netstat -tlnp | grep ngrokd
-
-# 预期输出应包含：
-# tcp6       0      0 :::4443                 :::*                    LISTEN      1234/ngrokd
-```
-
-### 客户端连接测试
-```bash
-# 从客户端测试连接
-./ngrok -config=ngrok.cfg -log=stdout -proto=http 8080
-```
+1. **证书域名：** 默认使用 `ngrok.qiaopan.tech`，如需修改请在所有脚本中统一更改
+2. **防火墙：** 确保服务器防火墙和云服务商安全组都已开放相应端口
+3. **客户端证书：** 客户端需要信任根证书才能正常连接
+4. **服务重启：** 修改证书后需要重启 ngrokd 服务
+5. **日志查看：** 遇到问题时查看服务端和客户端日志进行排查
 
 ---
 
-## ⚠️ 故障排除
+## 🐛 故障排查
 
-### 常见问题及解决方案
+1. **服务无法启动：** 检查证书路径和权限
+2. **客户端连接失败：** 使用 `diagnose-connection.sh` 诊断
+3. **证书错误：** 使用 `verfiy_cert.sh` 验证证书
+4. **端口被占用：** 检查端口占用情况：`netstat -tlnp | grep 4443`
 
-#### 1. 证书生成失败
-```bash
-# 重新生成证书
-cd /usr/local/ngrok
-openssl genrsa -out rootCA.key 2048
-openssl req -x509 -new -nodes -key rootCA.key -subj "/CN=your-domain.com" -days 5000 -out rootCA.pem
-```
-
-#### 2. 端口被占用
-```bash
-# 检查端口占用
-lsof -i :4443
-
-# 终止占用进程
-kill -9 <PID>
-```
-
-#### 3. 客户端连接超时
-- 检查服务器防火墙设置
-- 验证域名解析是否正确
-- 确认客户端配置文件中的服务器地址
-
----
-
-## 🔐 安全建议
-
-1. **定期更新证书**: 建议每6个月更新一次SSL证书
-2. **使用复杂令牌**: 客户端认证使用强令牌
-3. **限制访问IP**: 通过防火墙限制客户端连接IP
-4. **监控服务状态**: 设置服务监控和告警
-5. **日志审计**: 定期检查访问日志，发现异常行为
-
----
-
-## 💡 高级配置
-
-### 多域名支持
-在证书生成时指定多个域名：
-```bash
-openssl req -new -key device.key -subj "/CN=ngrok1.domain.com" -out device1.csr
-openssl req -new -key device.key -subj "/CN=ngrok2.domain.com" -out device2.csr
-```
-
-### 负载均衡配置
-```yaml
-# 在多台服务器间配置负载均衡
-server_addr: "ngrok1.domain.com:4443,ngrok2.domain.com:4443"
-```
-
-> 部署完成后，您就拥有了一个完全自控的内网穿透服务，可以安全地将本地服务暴露到公网，适用于开发测试、演示、远程访问等多种场景。
 ```
