@@ -11,6 +11,7 @@
 - **分类目录**: [国内访问](http://qiaopan.tech/post/) | [国外访问](https://wugjun.github.io/post/)
 
 - **个人简历-中文** (2025-11-25)
+
   - [国内访问](http://qiaopan.tech/post/about/) | [国外访问](https://wugjun.github.io/post/about/)
 
 - **个人简历-英文** (2024-01-09)
@@ -21,18 +22,19 @@
 ### 🗡️ 编程语言
 
 - **分类目录**: [国内访问](http://qiaopan.tech/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/) | [国外访问](https://wugjun.github.io/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/)
+
 ---
 
 ### ⚔️ 后端架构
 
 - **分类目录**: [国内访问](http://qiaopan.tech/%E5%90%8E%E7%AB%AF%E6%9E%B6%E6%9E%84/) | [国外访问](https://wugjun.github.io/%E5%90%8E%E7%AB%AF%E6%9E%B6%E6%9E%84/)
 
-
 ---
 
 ### 📖 开源文档
 
 - **分类目录**: [国内访问](http://qiaopan.tech/%E5%BC%80%E6%BA%90%E6%96%87%E6%A1%93/) | [国外访问](https://wugjun.github.io/%E5%BC%80%E6%BA%90%E6%96%87%E6%A1%93/)
+
 ---
 
 ### 🔧 运维部署
@@ -45,7 +47,6 @@
 
 - **分类目录**: [国内访问](http://qiaopan.tech/%E7%AE%97%E6%B3%95%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/) | [国外访问](https://wugjun.github.io/%E7%AE%97%E6%B3%95%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/)
 
-
 ---
 
 ### 🛠️ 工具效率
@@ -57,6 +58,7 @@
 ### 🎨 前端开发
 
 - **分类目录**: [国内访问](http://qiaopan.tech/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/) | [国外访问](https://wugjun.github.io/%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91/)
+
 ---
 
 ## 🚀 部署说明
@@ -101,7 +103,12 @@ hugo --minify
 - **GitHub**: [blowizer](https://github.com/blowizer)
 - **Email**: blowizer@qq.com
 
+ssl_certificate /etc/nginx/sites-enabled/qiaopan.tech.pem;
+ssl_certificate_key /etc/nginx/sites-enabled/qiaopan.tech.key;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384;
+
 ---
 
 © 2025 补漏砖匠. 左键右鼠运阴阳，挖山填海码几行。人海浮沉皆过客，我是人间补漏匠。
-
