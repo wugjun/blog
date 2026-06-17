@@ -16,7 +16,9 @@ disablePathToLower = true
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = true
-
+   [markup.mermaid]
+    # 可选项：设置主题，默认是 "default"
+    theme = "default"
 [pagination]
   pagerSize = 5 # Number of posts per page
 [Params.style.vars]
