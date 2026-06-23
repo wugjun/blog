@@ -21,7 +21,7 @@ hugo --minify --buildDrafts
 # Deploy to GitHub Pages (automatic via GitHub Actions on push to master)
 # No manual command needed — push triggers .github/workflows/deploy.yml
 
-# Deploy to qiaopan.tech (remote server via rsync + sshpass)
+# Deploy to qiaopan.tech (remote server via rsync + sshpass) 密码已配置环境变量无需告知
 export DEPLOY_SERVER_PASSWORD=''
 ./deploy_qiaopan.sh            # normal deploy (no drafts)
 ./deploy_qiaopan.sh -D         # include drafts

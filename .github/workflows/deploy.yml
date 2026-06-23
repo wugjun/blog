@@ -16,7 +16,8 @@ jobs:
 
     steps:
       - name: Checkout blog source
-        uses: actions/checkout@v4
+        # 将 checkout 从 v4 升级到 v6
+        uses: actions/checkout@v6
         with:
           submodules: recursive
           token: ${{ secrets.BLOG_ACCESS_TOKEN }}
@@ -32,6 +33,7 @@ jobs:
         run: hugo --minify --buildDrafts
 
       - name: Deploy to GitHub Pages
+        # 将 actions-gh-pages 从 v4 升级到 v4 的最新版
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.BLOG_ACCESS_TOKEN }}
