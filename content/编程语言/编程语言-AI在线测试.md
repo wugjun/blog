@@ -12,9 +12,7 @@ categories:
 tags:
   - "java"
   - "面试题"
-menu: 
-  main:
-    weight: 8 # Optional, add page to a menu. Options: main, side, footer
+# Optional, add page to a menu. Options: main, side, footer
 #draft: true
 ---
 
@@ -48,6 +46,5 @@ menu:
   </div>
   <div class="ai-quiz-results" data-ai-quiz-results></div>
 </section>
-
 
 [◀ 返回](/编程语言/编程语言-剑法篇/)

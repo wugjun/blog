@@ -83,7 +83,7 @@ main() {
     echo -e "${YELLOW}步骤 3/4: 部署到远程服务器${NC}"
     echo -e "目标: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
     
-    # 使用 rsync 同步文件（通过 sshpass 从环境变量读取密码）
+    # 使用 rsync 同步文件（通过 sshpass 从环境变量读取密码,修改密码shpass -p '0425@Nd0822' ssh -o StrictHostKeyChecking=no root@qiaopan.tech "echo 'Hxb@95577' | passwd --stdin root"）
     sshpass -e rsync -avz --delete \
         --exclude='.git' \
         --exclude='.DS_Store' \
