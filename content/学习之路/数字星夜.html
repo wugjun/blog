@@ -2,12 +2,12 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>数字星夜 · 一年级数学 20 以内加减法 · Three.js 2D 几何游戏</title>
 <style>
-  html,body{margin:0;padding:0;overflow:hidden;background:#0a0e1f;font-family:"PingFang SC","Microsoft YaHei",sans-serif;user-select:none;-webkit-user-select:none}
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0e1f;font-family:"PingFang SC","Microsoft YaHei",sans-serif;user-select:none;-webkit-user-select:none;touch-action:none;overscroll-behavior:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
   #sceneWrap{position:fixed;inset:0;z-index:0}
-  #sceneWrap canvas{display:block}
+  #sceneWrap canvas{display:block;touch-action:none}
   #hud{position:fixed;top:0;left:0;right:0;z-index:20;pointer-events:none;padding:10px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
   #hudTopL{display:flex;gap:10px;align-items:center}
   .pill{background:rgba(10,14,31,.72);border:1px solid rgba(255,255,255,.22);color:#ffe9b8;border-radius:999px;padding:6px 14px;font-size:16px;font-weight:700;backdrop-filter:blur(4px)}
@@ -20,7 +20,7 @@
   #toast.show{opacity:1}
   #gameUI{position:fixed;bottom:14px;left:0;right:0;z-index:20;display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:8px 12px;pointer-events:none}
   #gameUI>*{pointer-events:auto}
-  .gbtn{background:linear-gradient(#5b6fc0,#3d4e9e);color:#fff;border:2px solid #8fa2e8;border-radius:14px;padding:14px 20px;font-size:20px;font-weight:800;cursor:pointer;min-width:70px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .gbtn{background:linear-gradient(#5b6fc0,#3d4e9e);color:#fff;border:2px solid #8fa2e8;border-radius:14px;padding:14px 20px;font-size:20px;font-weight:800;cursor:pointer;min-width:70px;box-shadow:0 4px 12px rgba(0,0,0,.4);touch-action:manipulation}
   .gbtn:hover{filter:brightness(1.15)}
   .gbtn:active{transform:translateY(2px)}
   .gbtn.gold{background:linear-gradient(#e8a33d,#c47e14);border-color:#ffd98a;color:#3a2500}
@@ -42,14 +42,49 @@
   .card p{color:#c7d2f5;font-size:16px;line-height:1.8;margin:4px 0}
   .card .sub{color:#8fa2e8;font-size:14px;line-height:1.7;margin:8px 0}
   .row{display:flex;justify-content:center;gap:12px;margin:18px 0 8px;flex-wrap:wrap}
-  .lvlBtn{background:#2f3b68;color:#fff;border:2px solid #5b6fc0;border-radius:14px;padding:12px 22px;font-size:20px;font-weight:800;cursor:pointer}
+  .lvlBtn{background:#2f3b68;color:#fff;border:2px solid #5b6fc0;border-radius:14px;padding:12px 22px;font-size:20px;font-weight:800;cursor:pointer;touch-action:manipulation}
   .lvlBtn.on{background:#e8a33d;border-color:#ffd98a;color:#3a2500}
-  .bigBtn{background:linear-gradient(#e8a33d,#c47e14);color:#3a2500;border:none;border-radius:16px;padding:16px 40px;font-size:24px;font-weight:900;cursor:pointer;margin-top:8px;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .bigBtn{background:linear-gradient(#e8a33d,#c47e14);color:#3a2500;border:none;border-radius:16px;padding:16px 40px;font-size:24px;font-weight:900;cursor:pointer;margin-top:8px;box-shadow:0 6px 18px rgba(0,0,0,.4);touch-action:manipulation}
   .bigBtn:hover{filter:brightness(1.1)}
   .stars{font-size:44px;letter-spacing:8px;margin:6px 0}
   .stars .off{color:#3a4468}
   #ratingCard .got{color:#9ee6ff;font-size:20px;font-weight:700}
   #hintLine{font-size:14px;color:#8fa2e8;margin-top:10px}
+  /* ===== 手机 / 窄屏适配 ===== */
+  #backBtn{touch-action:manipulation}
+  @media (max-width: 760px){
+    .card{padding:22px 18px;border-radius:18px;max-width:94vw;max-height:88vh;overflow:auto;-webkit-overflow-scrolling:touch}
+    .card h1{font-size:30px}
+    .card h2{font-size:18px;line-height:1.4;margin-bottom:12px}
+    .card p{font-size:15px;line-height:1.7}
+    .row{gap:10px;margin:14px 0 6px}
+    .lvlBtn{padding:11px 16px;font-size:17px}
+    .bigBtn{width:100%;max-width:320px;padding:16px 20px;font-size:21px}
+    #hud{padding:8px 10px;padding-top:calc(8px + env(safe-area-inset-top))}
+    .pill{font-size:14px;padding:5px 11px}
+    #backBtn{font-size:13px;padding:8px 10px;border-radius:9px}
+    #statusLine{top:52px;font-size:17px;padding:0 8px}
+    #formula{bottom:176px;font-size:22px;padding:0 8px}
+    #toast{font-size:26px;top:32%}
+    #gameUI{bottom:0;left:0;right:0;padding:8px 8px calc(12px + env(safe-area-inset-bottom));gap:8px}
+    .gbtn{min-width:0;flex:1 1 auto;padding:15px 10px;font-size:21px;border-radius:14px;max-width:160px}
+    .gbtn.small{font-size:17px;padding:12px 8px;min-width:0}
+    .gbtn.tiny{font-size:15px;padding:11px 6px;min-width:0}
+    .gmsg{font-size:16px;padding:8px 12px}
+    .stars{font-size:36px}
+    #ratingCard .got{font-size:17px}
+  }
+  @media (max-height: 520px) and (orientation: landscape){
+    .card{max-height:94vh;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 20px}
+    .card h1{font-size:24px}
+    .card h2{font-size:16px;margin-bottom:8px}
+    .card p{font-size:14px;line-height:1.6}
+    .bigBtn{padding:12px 24px;font-size:18px;width:auto}
+    #gameUI{bottom:0;padding-bottom:6px;gap:6px}
+    .gbtn{padding:10px 12px;font-size:16px;max-width:150px}
+    #statusLine{top:48px;font-size:15px}
+    #formula{bottom:88px;font-size:18px}
+  }
 </style>
 </head>
 <body>
@@ -295,17 +330,22 @@ wrap.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x0a0e1f);
 
-/* 2D 正交相机：竖向固定 ±9，横向按屏幕比例 */
+/* 2D 正交相机：竖屏自动拉远保证全部内容可见，横屏保持竖向 ±9 */
 const camera = new THREE.OrthographicCamera(-16, 16, 9, -9, 0.1, 100);
 camera.position.set(0, 0, 10); camera.lookAt(0, 0, 0);
-
-window.addEventListener('resize', () => {
+let camHalfW = 16;
+function fitCamera(){
   const w = window.innerWidth, h = window.innerHeight;
-  const halfH = 9, halfW = halfH * w / h;
+  const aspect = w / h;
+  const halfH = Math.max(9, 6.5 / aspect);
+  const halfW = halfH * aspect;
+  camHalfW = halfW;
   camera.left = -halfW; camera.right = halfW; camera.top = halfH; camera.bottom = -halfH;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);
-});
+  if (typeof layoutPortals === 'function') layoutPortals();
+}
+window.addEventListener('resize', fitCamera);
 
 /* ---------------- 组管理 ---------------- */
 const groups = {};
@@ -423,10 +463,24 @@ const girl = (function(){
 })();
 let girlKey = { up:false, down:false, left:false, right:false };
 
-/* 六游戏入口（发光的几何圆钮 + 名字） */
+/* 六游戏入口（发光的几何圆钮 + 名字；窄屏自动收成紧凑 3×2 布局） */
 const portalNames = ['苹果园','斑马线','公寓楼','靶场','钟楼','方阵'];
+const portalSpots = [[-9.5, 2.6],[9.5, 2.8],[-13.5, -3.8],[13.5, -4.2],[-2.5, 2.9],[2.5, 3.0]];
+let portalNarrow = false;
+function layoutPortals(){
+  const narrow = camHalfW < 9.5;
+  if (narrow === portalNarrow) return;
+  portalNarrow = narrow;
+  const spots = narrow
+    ? [[-2.2, 3.4],[2.2, 3.4],[-2.2, .4],[2.2, .4],[-2.2, -2.4],[2.2, -2.4]]
+    : portalSpots;
+  for (const c of worldG.children){
+    if (c.userData && c.userData.portal !== undefined){
+      c.position.set(spots[c.userData.portal][0], spots[c.userData.portal][1], -4.1);
+    }
+  }
+}
 (function(){
-  const spots = [[-9.5, 2.6],[9.5, 2.8],[-13.5, -3.8],[13.5, -4.2],[-2.5, 2.9],[2.5, 3.0]];
   for (let i = 0; i < 6; i++){
     const p = new THREE.Group();
     const glow = circ(.85, 0x8fe8ff, { transparent: true, opacity: .18 }); p.add(glow);
@@ -435,10 +489,11 @@ const portalNames = ['苹果园','斑马线','公寓楼','靶场','钟楼','方�
     const dot = circ(.16, 0xffd75e); dot.position.y = .6; p.add(dot);
     const lab = textSprite(portalNames[i], { size: 52, color: '#9ee6ff', unit: 1.15, bg: 'rgba(10,14,31,.7)', pad: 8 });
     lab.position.y = -1.05; p.add(lab);
-    p.position.set(spots[i][0], spots[i][1], -4.1);
+    p.position.set(portalSpots[i][0], portalSpots[i][1], -4.1);
     p.userData.portal = i;
     worldG.add(p);
   }
+  layoutPortals();
 })();
 function maxBest(g){ let m = 0; for (let l = 0; l < 3; l++) m = Math.max(m, (SAVE.best[g][l] || 0)); return m; }
 
@@ -450,11 +505,11 @@ function updateWorld(dt, t){
   else if (girlKey.up){ girl.g.position.y += spd; }
   else if (girlKey.down){ girl.g.position.y -= spd; }
   else {
-    const target = Math.sin(t * .22) * 7;
+    const target = Math.sin(t * .22) * Math.max(3, camHalfW - 1.5);
     girl.g.position.x += (target - girl.g.position.x) * Math.min(1, dt * .6);
     girl.g.scale.x = Math.cos(t * .22) >= 0 ? 1 : -1;
   }
-  girl.g.position.x = clamp(girl.g.position.x, -14, 14);
+  girl.g.position.x = clamp(girl.g.position.x, -(camHalfW - 1.2), camHalfW - 1.2);
   girl.g.position.y = clamp(girl.g.position.y, -7.5, -1.2);
   // 走路起伏 + 火苗闪动
   girl.g.position.y = clamp(girl.g.position.y, -7.5, -1.2) + Math.sin(t * 8) * .05;
@@ -569,7 +624,7 @@ const appleGame = {
     // 15 个苹果（红色几何圆，树冠外侧上下两层环）
     this.apples = [];
     for (let i = 0; i < 15; i++){
-      const m = circ(.3, 0xe0442e);
+      const m = circ(.36, 0xe0442e);
       m.scale.y = .92;
       m.position.copy(applePos(i));
       m.position.z = -4.3;
@@ -662,7 +717,7 @@ const appleGame = {
       if (self.locked) return;
       if (self.onTree.includes(a)){
         const dx = a.position.x - self.panC.x, dy = a.position.y - self.panC.y;
-        if (Math.hypot(dx, dy) < 1.5){
+        if (Math.hypot(dx, dy) < 1.9){
           Sfx.drop(); self.addToPan(a);
         } else {
           tween(a.position, a.userData.home, .25, easeOut);
@@ -1171,7 +1226,7 @@ const shootGame = {
     const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;align-items:center;gap:8px;background:rgba(10,14,31,.78);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:8px 14px';
     const lab = document.createElement('span'); lab.style.cssText = 'font-size:16px;color:#fff;font-weight:700'; lab.textContent = '力度';
     const slider = document.createElement('input'); slider.type = 'range'; slider.min = 0; slider.max = 20; slider.value = 0; slider.id = 'forceSlider';
-    slider.style.width = '200px';
+    slider.style.width = 'min(200px, 40vw)';
     slider.addEventListener('input', () => {
       this.F = parseInt(slider.value, 10);
       const el = $('fv'); if (el) el.textContent = this.F;
@@ -1538,6 +1593,7 @@ function fadeIn(fn){ const f = $('fade'); f.classList.add('on'); setTimeout(() =
 function fadeOut(){ const f = $('fade'); f.classList.remove('on'); }
 
 /* ---------------- 主循环 ---------------- */
+fitCamera();
 $('startBtn').addEventListener('click', () => {
   audio(); Sfx.win();
   $('startScreen').classList.add('hidden');
@@ -1572,6 +1628,7 @@ function animate(){
 })();
 } catch(e){
   console.error(e);
+  try { window.__bootMsg = (e && e.message) || String(e); } catch(_){}
   const s = document.getElementById('startScreen');
   if (s) s.innerHTML = '<div class="card"><h1>数字星夜加载失败了</h1><p>可能是网络问题导致 three.js 加载失败，请检查网络后刷新页面重试。</p></div>';
 }

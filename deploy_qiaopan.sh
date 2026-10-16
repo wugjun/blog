@@ -93,8 +93,9 @@ main() {
     echo -e "${YELLOW}步骤 3/4: 部署到远程服务器${NC}"
     echo -e "目标: ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}"
     
-    # 使用 rsync 同步文件（通过 sshpass 从环境变量读取密码,修改密码shpass -p '0425@Nd0822' ssh -o StrictHostKeyChecking=no root@qiaopan.tech "echo 'Hxb@95577' | passwd --stdin root"）
+    # 使用 rsync 同步文件，并强制设置权限以避免 403 错误
     sshpass -e rsync -avz --delete \
+        --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r \
         --exclude='.git' \
         --exclude='.DS_Store' \
         "$LOCAL_PUBLIC_DIR/" \
@@ -107,6 +108,12 @@ main() {
     fi
     
     echo -e "${GREEN}✓ 文件同步完成${NC}"
+
+    # 4.5 强制修复远程目录权限（双重保险）
+    echo -e "${YELLOW}步骤 3.5: 修复远程目录权限${NC}"
+    sshpass -e ssh -o StrictHostKeyChecking=no "${REMOTE_USER}@${REMOTE_HOST}" \
+        "chmod -R 755 ${REMOTE_PATH}/apps/ && chown -R ${REMOTE_USER}:${REMOTE_USER} ${REMOTE_PATH}/apps/"
+    echo -e "${GREEN}✓ 远程权限已修正${NC}"
     
     # 5. 在远程服务器创建版本标记文件（使用 sshpass 从环境变量读取密码）
     echo -e "${YELLOW}步骤 4/4: 创建版本标记${NC}"
