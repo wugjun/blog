@@ -368,7 +368,7 @@ function refreshHud(){
   }
   _lastCoins = SAVE.coins; _lastStars = SAVE.stars;
 }
-/* 操作级金币：正确计算 +2 金币（飘到金币罐），错误 −1 金币（不低于 0） */
+/* 本局结算金币：通过按难度 +2/4/6（飘到金币罐），不通过 −1 金币（不低于 0） */
 function gainCoins(n){
   const before = SAVE.coins;
   SAVE.coins = Math.max(0, (SAVE.coins || 0) + n);
@@ -532,12 +532,10 @@ const worldG = makeGroup('world');
   bg.position.z = -5; worldG.add(bg);
   // 地面（夜空下半的深色原野，几何矩形）
   const ground = rect(40, 9.2, 0x141b33); ground.position.set(0, -4.6, -4.5); worldG.add(ground);
-  // 两条交汇的道路（灰色几何矩形 + 白色虚线小矩形）
+  // 一条横向道路（灰色几何矩形 + 白色虚线小矩形）
   const road1 = rect(40, 1.7, 0x39415c); road1.position.set(0, -2.6, -4.4); worldG.add(road1);
-  const road2 = rect(1.7, 9.2, 0x39415c); road2.position.set(5.5, -4.6, -4.4); worldG.add(road2);
   for (let i = -16; i <= 16; i += 1.1){
     const m = rect(.16, .5, 0xdfe6ff); m.position.set(i, -2.6, -4.3); worldG.add(m);
-    const m2 = rect(.5, .16, 0xdfe6ff); m2.position.set(5.5, i - 9, -4.3); worldG.add(m2);
   }
 })();
 
@@ -606,10 +604,11 @@ const girl = (function(){
   const coat = rect(.62, 1.05, 0xb8452f); coat.position.y = .85; g.add(coat);
   const skirt = tri(.95, .55, 0x7a2d22); skirt.position.y = .3; g.add(skirt);
   const head = circ(.34, 0xffd9b3); head.position.y = 1.72; g.add(head);
-  const hair = new THREE.Mesh(new THREE.CircleGeometry(.36, 24, 0, Math.PI), new THREE.MeshBasicMaterial({ color: 0x8a5a2b }));
-  hair.position.y = 1.74; g.add(hair);
+  // 蘑菇头短发（只盖头顶，露出脸，不再是长发）
+  const hair = new THREE.Mesh(new THREE.CircleGeometry(.3, 24, 0, Math.PI), new THREE.MeshBasicMaterial({ color: 0x8a5a2b }));
+  hair.position.y = 1.92; g.add(hair);
   const face = new THREE.Sprite(new THREE.SpriteMaterial({ map: faceTex('neutral'), transparent: true }));
-  face.scale.set(.95, .83, 1); face.position.set(0, 1.74, .1); g.add(face);
+  face.scale.set(.95, .83, 1); face.position.set(0, 1.72, .1); g.add(face);
   // 火柴棒（细线）与火焰（圆）
   const stick = lineSeg(.2, .5, .9, 1.55, 0xd8a25a, .07); g.add(stick);
   const tip = circ(.09, 0xffb15e); tip.position.set(.78, 1.52, .05); g.add(tip);
@@ -622,7 +621,7 @@ const girl = (function(){
 let girlKey = { up:false, down:false, left:false, right:false };
 
 /* 六游戏入口（发光的几何圆钮 + 名字；窄屏自动收成紧凑 3×2 布局） */
-const portalNames = ['苹果园','斑马线','公寓楼','靶场','钟楼','方阵'];
+const portalNames = ['苹果园','斑马线','公寓楼','弹瓶盖','空气猫','毛毛虫家'];
 const portalSpots = [[-9.5, 2.6],[9.5, 2.8],[-13.5, -3.8],[13.5, -4.2],[-2.5, 2.9],[2.5, 3.0]];
 let portalNarrow = false;
 function layoutPortals(){
@@ -880,7 +879,6 @@ const appleGame = {
         const dx = a.position.x - self.panC.x, dy = a.position.y - self.panC.y;
         if (Math.hypot(dx, dy) < 1.9){
           Sfx.drop(); self.addToPan(a);
-          if (self.X <= self.N) gainCoins(2);
         } else {
           tween(a.position, a.userData.home, .25, easeOut);
         }
@@ -924,7 +922,6 @@ const appleGame = {
     }
     if (taken > 0){
       Sfx.drop();
-      if (this.X <= this.N) gainCoins(2);
     }
   },
   updateStatus(){
@@ -941,7 +938,7 @@ const appleGame = {
     this.balanceWord.material.map = textSprite(word, { size: 60, color: color, unit: 1.5, bg: 'rgba(10,14,31,.7)', pad: 10 }).material.map;
     this.balanceWord.material.needsUpdate = true;
     if (x === n && !this.won){ this.won = true; setTimeout(() => this.celebrate(), 450); }
-    if (x > n && !this.locked){ this.locked = true; this.retries++; Sfx.fail(); gainCoins(-1); toast('太重了！苹果比砝码重，重新开始（金币 −1）'); setTimeout(() => this.restartPick(), 1300); }
+    if (x > n && !this.locked){ this.locked = true; this.retries++; Sfx.fail(); toast('太重了！苹果比砝码重，重新开始'); setTimeout(() => this.restartPick(), 1300); }
   },
   restartPick(){
     for (const a of this.apples){
@@ -966,6 +963,7 @@ const appleGame = {
     const stars = this.level;
     SAVE.stars += stars;
     if (!SAVE.best[0] || (SAVE.best[0][this.level-1] || 0) < stars){ (SAVE.best[0] = SAVE.best[0] || []); SAVE.best[0][this.level-1] = stars; }
+    gainCoins(2 * this.level);  // 本局通过：按难度 ★+2 / ★★+4 / ★★★+6（结算时发放）
     persist();
     showRating('摘苹果', stars, 0, this.afterEnd);
   },
@@ -1018,11 +1016,21 @@ const crossGame = {
     const skyTex = new THREE.CanvasTexture(skyC); skyTex.encoding = THREE.sRGBEncoding;
     const sky = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: skyTex });
     sky.position.z = -5; g.add(sky);
-    // 路面（灰色矩形）+ 斑马线（白色竖条矩形）
+    // 路面（灰色矩形）+ 人行横道斑马线（横向条纹组）
     const road = rect(40, 4.2, 0x232a44); road.position.set(0, -4.6, -4.5); g.add(road);
     const zebra = rect(40, 2.6, 0x39415c); zebra.position.set(0, -4.6, -4.4); g.add(zebra);
-    for (let i = 0; i < 7; i++){
-      const m = rect(.34, 1.5, 0xdfe6ff); m.position.set(-3 + i * .95, -4.6, -4.3); g.add(m);
+    for (let i = 0; i < 6; i++){
+      const m = rect(1.05, .62, 0xdfe6ff); m.position.set(-2.9 + i * 1.05, -4.6, -4.3); g.add(m);
+    }
+    // 路灯（杆 + 灯罩圆）
+    const lp = rect(.14, 2.1, 0x666b7a); lp.position.set(-6.2, -3.75, -4.3); g.add(lp);
+    const lh = circ(.17, 0xffd75e); lh.position.set(-6.2, -2.6, -4.2); g.add(lh);
+    // 路旁小树（马路下沿两棵：棕干 + 绿冠）
+    for (const px of [-7.5, 7.2]){
+      const t = new THREE.Group();
+      const tr = rect(.26, .85, 0x6b4a30); tr.position.y = -.42; t.add(tr);
+      const tc = tri(.95, .72, 0x2f8a4c); tc.position.y = .18; t.add(tc);
+      t.position.set(px, -6.2, -4.4); g.add(t);
     }
     // 数轴 0-9（直线 + 刻度 + 数字）
     lineSeg(-4.5, -2.6, 4.5, -2.6, 0x8fe8ff, .07).position.z = -4.2;
@@ -1037,12 +1045,23 @@ const crossGame = {
     const lampBox = rect(.7, 1.6, 0x2b2f3d); lampBox.position.set(5.4, .9, -4.2); g.add(lampBox);
     this.greenLamp = circ(.26, 0x2f8a4c); this.greenLamp.position.set(5.4, 1.45, -4.1); g.add(this.greenLamp);
     this.redLamp = circ(.26, 0x4a2f2c); this.redLamp.position.set(5.4, .45, -4.1); g.add(this.redLamp);
-    // 老奶奶（2D 火柴人：圆头 + 矩形身体 + 三角裙 + 拐杖线）
+    // 老奶奶（2D 火柴人：白发发髻 + 小眼睛 + 慈祥微笑 + 红围巾 + 拐杖）
     const gm = new THREE.Group();
     const body = rect(.52, 1.0, 0x8a5a8a); body.position.y = .7; gm.add(body);
     const skirt = tri(.8, .5, 0x6a3a6a); skirt.position.y = .15; gm.add(skirt);
     const head = circ(.28, 0xffe0c0); head.position.y = 1.5; gm.add(head);
-    const scarf = tri(.55, .4, 0xd94a4a); scarf.position.y = 1.72; gm.add(scarf);
+    // 银白头发（顶部三角白发 + 两侧鬓角 + 发髻），不再像长头发小女孩
+    const hairTop = tri(.34, .22, 0xececf4); hairTop.position.y = 1.68; gm.add(hairTop);
+    const sideL = circ(.1, 0xececf4); sideL.position.set(-.26, 1.52, .02); gm.add(sideL);
+    const sideR = circ(.1, 0xececf4); sideR.position.set(.26, 1.52, .02); gm.add(sideR);
+    const bun = circ(.15, 0xd8d8e6); bun.position.set(.08, 1.82, .02); gm.add(bun);
+    // 小眼睛 + 慈祥笑脸（两段折线微笑）
+    const eyeL = circ(.05, 0x3a2a24); eyeL.position.set(-.1, 1.56, .03); gm.add(eyeL);
+    const eyeR = circ(.05, 0x3a2a24); eyeR.position.set(.1, 1.56, .03); gm.add(eyeR);
+    const mouth1 = lineSeg(-.09, 1.36, 0, 1.31, 0x8a4a3a, .045); gm.add(mouth1);
+    const mouth2 = lineSeg(0, 1.31, .09, 1.36, 0x8a4a3a, .045); gm.add(mouth2);
+    // 红围巾移到脖子
+    const scarf = tri(.5, .34, 0xd94a4a); scarf.position.y = 1.3; gm.add(scarf);
     const cane = lineSeg(.35, .15, .75, .9, 0x8a6a3a, .06); gm.add(cane);
     gm.position.set(-4.5, -2.6, -4.3); g.add(gm);
     this.grandma = gm;
@@ -1084,7 +1103,6 @@ const crossGame = {
     const to = Math.min(this.dist, this.pos + v);
     this.pos = to; this.presses++; this.green--;
     Sfx.tick();
-    gainCoins(2);
     const sx = -4.5 + to * this.spacing;
     tween(this.grandma.position, { x: sx }, .3, easeOut, () => {
       this.grandma.rotation.z = Math.sin(performance.now()/80) * .06;
@@ -1101,6 +1119,7 @@ const crossGame = {
     const stars = this.level;
     SAVE.stars += stars;
     if ((SAVE.best[1][this.level-1] || 0) < stars) SAVE.best[1][this.level-1] = stars;
+    gainCoins(2 * this.level);
     persist();
     showRating('扶老奶奶过马路', stars, 0, this.afterEnd);
   },
@@ -1219,24 +1238,24 @@ const stairGame = {
     if (this.locked) return;
     if (this.phase === 1){
       if (this.F + n !== this.mid){ this.wrong(); return; }
-      this.locked = true; Sfx.whoosh(); gainCoins(2);
+      this.locked = true; Sfx.whoosh();
       tween(this.boy.position, { y: -7.2 + (this.mid - 1) * 1.6 }, .8, easeInOut, () => {
         this.phase = 2; this.locked = false; this.nVal = undefined;
         this.updateInfo(); this.buildUI();
       });
     } else if (this.phase === 2){
       if (this.mid - n !== this.T){ this.wrong(); return; }
-      this.locked = true; Sfx.whoosh(); gainCoins(2);
+      this.locked = true; Sfx.whoosh();
       tween(this.boy.position, { y: -7.2 + (this.T - 1) * 1.6 }, .8, easeInOut, () => this.win());
     } else {
       const ok = this.sign === '+' ? (this.F + n === this.T) : (this.F - n === this.T);
       if (!ok){ this.wrong(); return; }
-      this.locked = true; Sfx.whoosh(); gainCoins(2);
+      this.locked = true; Sfx.whoosh();
       tween(this.boy.position, { y: -7.2 + (this.T - 1) * 1.6 }, .8, easeInOut, () => this.win());
     }
   },
   wrong(){
-    this.errors++; Sfx.cry(); this.setFace('cry'); gainCoins(-1);
+    this.errors++; Sfx.cry(); this.setFace('cry');
     tween(this.boy.scale, { x: 1.15, y: .9, z: 1.15 }, .12, null, () => tween(this.boy.scale, { x: 1, y: 1, z: 1 }, .18, easeOut, () => this.setFace('happy')));
     if (this.errors >= 2){
       let hint;
@@ -1252,6 +1271,7 @@ const stairGame = {
     const stars = this.level;
     SAVE.stars += stars;
     if ((SAVE.best[2][this.level-1] || 0) < stars) SAVE.best[2][this.level-1] = stars;
+    gainCoins(2 * this.level);
     persist();
     showRating('帮小男孩爬楼梯', stars, 0, this.afterEnd);
   },
@@ -1274,7 +1294,7 @@ const stairGame = {
 const shootG = makeGroup('shoot');
 const shootGame = {
   init(){ const g = shootG;
-    // 靶场夜景背景
+    // 夜空背景
     const skyC = document.createElement('canvas'); skyC.width = 64; skyC.height = 256;
     const sk = skyC.getContext('2d');
     const grad = sk.createLinearGradient(0, 0, 0, 256);
@@ -1283,107 +1303,128 @@ const shootGame = {
     const skyTex = new THREE.CanvasTexture(skyC); skyTex.encoding = THREE.sRGBEncoding;
     const sky = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: skyTex });
     sky.position.z = -5; g.add(sky);
-    const ground = rect(40, 2.8, 0x141b33); ground.position.set(0, -7.6, -4.5); g.add(ground);
-    // 靶（0 环=靶心，同心几何圆环）
+    // 地面（平铺整片）
+    const ground = rect(40, 14, 0x10182e); ground.position.set(0, 0, -4.6); g.add(ground);
+    // 地面圆形靶（俯视同心环：0 环=靶心金色，9 环=最外）
     this.target = new THREE.Group();
-    const palette = [0xffd75e,0xffb15e,0xff8a5a,0xff5a4d,0xd94a8a,0x8a5ad9,0x5b6fc0,0x3f9bd9,0x4fae6d,0x6b7280];
+    const palette = [0xffd75e,0xffc05e,0xffa05e,0xff8a5a,0xff5a4d,0xd94a8a,0x8a5ad9,0x5b6fc0,0x3f9bd9,0x4fae6d];
+    const RW = .32;
     for (let r = 0; r < 10; r++){
-      const ringM = ring(r*.34, (r+1)*.34, palette[r], { side: THREE.DoubleSide });
-      ringM.position.z = .02; this.target.add(ringM);
-      const num = textSprite(String(r), { size: 40, color: '#ffffff', unit: .26, pad: 0 });
-      const mid = (r + .5) * .34;
-      num.position.set(mid * Math.cos(-.6), mid * Math.sin(-.6), .05); this.target.add(num);
+      const disc = circ((r + 1) * RW, palette[r]);
+      disc.position.z = .01 * (r + 1);
+      this.target.add(disc);
     }
-    this.target.position.set(5.5, 2.5, -4.3); g.add(this.target);
-    // 靶架（矩形横杆 + 两条腿）
-    const stand = rect(3.0, .14, 0x8a6a3a); stand.position.set(5.5, .9, -4.3); g.add(stand);
-    const leg1 = lineSeg(4.2, .9, 4.4, -1.6, 0x8a6a3a, .12); g.add(leg1);
-    const leg2 = lineSeg(6.8, .9, 6.6, -1.6, 0x8a6a3a, .12); g.add(leg2);
-    // 弓（几何圆弧环 + 弦线）
-    const bow = new THREE.Group();
-    const arc = ring(.55, .7, 0x8a5a2b, { side: THREE.DoubleSide });
-    arc.rotation.z = Math.PI/2; bow.add(arc);
-    const str = lineSeg(0, -.7, 0, .7, 0xcccccc, .04); bow.add(str);
-    bow.position.set(-4.5, 2.5, -4.2); g.add(bow);
-    // 箭（矩形箭杆 + 三角箭头 + 羽尾）
-    const arrow = new THREE.Group();
-    const shaft = rect(1.3, .07, 0xc8a87a); arrow.add(shaft);
-    const tip = tri(.3, .24, 0xdfe6ff); tip.rotation.z = -Math.PI/2; tip.position.set(.78, 0, .02); arrow.add(tip);
-    const tail = tri(.22, .3, 0xff5a4d); tail.rotation.z = Math.PI/2; tail.position.set(-.62, 0, .02); arrow.add(tail);
-    arrow.position.set(-4.2, 2.5, -4.1); g.add(arrow);
-    this.arrow = arrow;
+    for (let r = 0; r < 10; r++){
+      const mid = (r + .5) * RW;
+      const num = textSprite(String(r), { size: 48, color: r === 0 ? '#6b4a00' : '#ffffff', unit: .3, pad: 0 });
+      num.position.set(mid * Math.cos(-.6), mid * Math.sin(-.6), .16);
+      this.target.add(num);
+    }
+    // 每环之间的轨道分隔线
+    for (let r = 0; r <= 10; r++){
+      const track = ring(r * RW, (r * RW + .025), 0xffffff, { transparent: true, opacity: .5, side: THREE.DoubleSide });
+      track.position.z = .2;
+      this.target.add(track);
+    }
+    this.target.position.z = -4.4; g.add(this.target);
+    // 瓶盖（俯视：边缘 + 盖顶 + 高光）
+    const cap = new THREE.Group();
+    const edge = circ(.36, 0xb8862e); edge.position.z = .01; cap.add(edge);
+    const top = circ(.3, 0xd9b06a); top.position.z = .02; cap.add(top);
+    const shine = circ(.08, 0xffffff, { transparent: true, opacity: .9 }); shine.position.set(-.09, .09, .03); cap.add(shine);
+    this.cap = cap; g.add(cap);
+    // 目标线（力度＝距离的提示：靶心到起点连一条虚线示意 d）
     this.shootG = g;
   },
   start(level, afterEnd){
     this.afterEnd = afterEnd; this.level = level;
-    const Dmax = [3,5,8][level-1], Amax = [2,5,5][level-1];
-    this.round = 1; this.total = 0; this.locked = false;
-    this.newRound(Dmax, Amax);
+    this.round = 1; this.total = 0; this.locked = false; this.F = 0;
+    this.newRound();
     this.buildUI();
   },
-  newRound(Dmax, Amax){
-    this.D = randi(1, Dmax); this.A = randi(0, Amax);
+  newRound(){
+    const Dmin = [3,5,7][this.level-1], Dmax = [5,8,9][this.level-1];
+    this.D = randi(Dmin, Dmax);
     this.F = 0;
-    this.arrow.visible = true; this.arrow.position.set(-4.2, 2.5, -4.1);
-    this.arrow.rotation.z = 0;
+    this.target.position.set(-6.0 + this.D, 0, -4.4);
+    this.cap.position.set(-6.0, 0, -4.3);
+    this.cap.visible = true;
     const st = $('statusLine');
-    st.innerHTML = '第 ' + this.round + ' / 3 轮 · 距离 <b style="color:#9ee6ff">' + this.D + '</b> · 角度 <b style="color:#9ee6ff">' + this.A + '</b> · 力度 <b style="color:#ffd75e" id="fv">' + this.F + '</b>';
-    $('formula').textContent = '目标：力度 ＝ 距离 ＋ 角度 ＝ ' + (this.D + this.A) + '（0 环）';
+    st.innerHTML = '第 ' + this.round + ' / 3 发 · 距离 <b style="color:#9ee6ff">' + this.D + '</b> · 力度 <b style="color:#ffd75e" id="fv">0</b> · 总分 <b style="color:#8fe8b0">' + this.total + '</b>';
+    $('formula').textContent = '滑动力度条设力度，发射瓶盖！力度 ＝ 距离 → 落 0 环靶心（最高分）';
     const slider = $('forceSlider');
     if (slider){ slider.value = 0; slider.max = 20; }
   },
-  shoot(){
+  setForce(f){
+    this.F = clamp(Math.round(f), 0, 20);
+    const el = $('fv');
+    if (el){
+      el.textContent = this.F;
+      el.style.display = 'inline-block';
+      el.style.animation = 'none'; void el.offsetWidth;
+      el.style.animation = 'calcJump .5s cubic-bezier(.2,2.4,.4,1)';
+    }
+    this.cap.position.x = -6.0 - this.F * .02;
+    const slider = $('forceSlider'); if (slider) slider.value = this.F;
+  },
+  fire(){
     if (this.locked) return;
     this.locked = true; Sfx.whoosh();
-    const E = this.F - this.D - this.A;
-    const targetX = 5.5, startX = -4.2;
-    let endPos, isHit = false, ring = 0;
-    if (this.F < this.D || E < 0){ endPos = { x: (startX + targetX)/2, y: 2.5, z: -4.1 }; isHit = false; }
-    else if (E > 9){ endPos = { x: 11.5, y: 5.4, z: -4.1 }; isHit = false; }
-    else { ring = E; isHit = true; endPos = { x: targetX + (E + .5) * .34, y: 2.5, z: -4.1 }; }
-    const from = { x: this.arrow.position.x, y: this.arrow.position.y, z: this.arrow.position.z };
-    const t0 = performance.now(), dur = 900;
+    const diff = Math.abs(this.F - this.D);
+    const ring = diff <= 9 ? diff : -1;  // -1 = 脱靶
+    const tx = this.target.position.x;
+    const endX = ring >= 0 ? tx + (this.F - this.D) * .32 : tx + (this.F - this.D > 0 ? 1 : -1) * 4.0;
+    const fromX = this.cap.position.x;
+    const t0 = performance.now(), dur = 800;
     const self = this;
     function step(now){
       let t = clamp((now - t0)/dur, 0, 1);
       const yy = easeOut(t);
-      self.arrow.position.set(
-        from.x + (endPos.x - from.x) * yy,
-        from.y + (endPos.y - from.y) * yy + Math.sin(t*Math.PI) * .35,
-        from.z + (endPos.z - from.z) * yy
-      );
-      self.arrow.rotation.z = Math.atan2(endPos.y - from.y, endPos.x - from.x) * Math.min(1, t * 3);
+      self.cap.position.set(fromX + (endX - fromX) * yy, 0, -4.3);
       if (t < 1) requestAnimationFrame(step);
-      else {
-        self.arrow.visible = isHit || E <= 9;
-        self.resolve(isHit, ring, E);
-      }
+      else self.resolve(ring, diff);
     }
     requestAnimationFrame(step);
   },
-  resolve(isHit, ring, E){
+  resolve(ring, diff){
     const st = $('statusLine');
-    if (!isHit){
-      st.innerHTML = '脱靶！0 分（力度 ' + this.F + '，有效值 ' + E + '）';
-      Sfx.fail(); gainCoins(-1);
+    if (ring < 0){
+      st.innerHTML = '飞出去脱靶了！0 分 · 力度 ' + this.F + ' 差 ' + diff + '（要 ≤ 9 才落靶）';
+      Sfx.fail();
     } else {
       const score = 10 - ring;
       this.total += score;
-      Sfx.coin(); gainCoins(2);
-      st.innerHTML = '命中 <b style="color:#ffd75e">' + ring + ' 环</b> ＋' + score + ' 分 · 本轮累计 <b>' + this.total + '</b>';
+      Sfx.coin();
+      st.innerHTML = '落点 <b style="color:#ffd75e">' + ring + ' 环</b> ＋' + score + ' 分 · 总分 <b style="color:#8fe8b0">' + this.total + '</b>';
+      // 落点处大数字跳跃
+      const nn = textSprite(String(ring), { size: 130, color: '#ffd75e', unit: .62, pad: 0 });
+      nn.position.set(this.target.position.x + (this.F - this.D) * .32, 0, -4.2);
+      nn.scale.set(.01, .01, .01);
+      this.shootG.add(nn);
+      tween(nn.scale, { x: 1, y: 1, z: 1 }, .45, easeOut);
+      setTimeout(() => { nn.visible = false; }, 1500);
     }
-    $('formula').textContent = '有效值 ＝ 力度 − 距离 − 角度 ＝ ' + this.F + ' − ' + this.D + ' − ' + this.A + ' ＝ ' + E;
+    renderCalc(this.F, '−', this.D, diff, 'c');
     setTimeout(() => {
       if (this.round >= 3) this.finish();
-      else { this.round++; this.newRound([3,5,8][this.level-1], [2,5,5][this.level-1]); this.locked = false; }
-    }, 1600);
+      else { this.round++; this.newRound(); this.locked = false; }
+    }, 1700);
   },
   finish(){
-    const stars = this.level;
-    SAVE.stars += stars;
-    if ((SAVE.best[3][this.level-1] || 0) < stars) SAVE.best[3][this.level-1] = stars;
-    persist();
-    showRating('打靶', stars, 0, this.afterEnd, '总积分 ' + this.total + ' / 30');
+    const need = [18,21,24][this.level-1];
+    if (this.total >= need){
+      const stars = this.level;
+      SAVE.stars += stars;
+      if ((SAVE.best[3][this.level-1] || 0) < stars) SAVE.best[3][this.level-1] = stars;
+      gainCoins(2 * this.level);
+      persist();
+      showRating('弹瓶盖', stars, 0, this.afterEnd, '总积分 ' + this.total + '（需 ≥ ' + need + '）');
+    } else {
+      Sfx.fail(); gainCoins(-1);
+      this.locked = true;
+      toast('总分 ' + this.total + ' 不够 ' + need + '，再来一次！');
+      setTimeout(() => { this.start(this.level, this.afterEnd); }, 1600);
+    }
   },
   buildUI(){
     clearUI();
@@ -1391,14 +1432,11 @@ const shootGame = {
     const lab = document.createElement('span'); lab.style.cssText = 'font-size:16px;color:#fff;font-weight:700'; lab.textContent = '力度';
     const slider = document.createElement('input'); slider.type = 'range'; slider.min = 0; slider.max = 20; slider.value = 0; slider.id = 'forceSlider';
     slider.style.width = 'min(200px, 40vw)';
-    slider.addEventListener('input', () => {
-      this.F = parseInt(slider.value, 10);
-      const el = $('fv'); if (el) el.textContent = this.F;
-    });
+    slider.addEventListener('input', () => this.setForce(parseInt(slider.value, 10)));
     wrap.appendChild(lab); wrap.appendChild(slider);
     $('gameUI').appendChild(wrap);
-    uiBtn('射箭', () => this.shoot(), 'gold');
-    uiMsg('调整力度后射箭，共 3 次机会');
+    uiBtn('发射！', () => this.fire(), 'gold');
+    uiMsg('滑动力度条弹射瓶盖！力度 − 距离 ＝ 落点环数，越接近 0 环分越高');
   },
   end(){ clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; }
 };
@@ -1417,87 +1455,144 @@ const clockGame = {
     const sky = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: skyTex });
     sky.position.z = -5; g.add(sky);
     const ground = rect(40, 3.2, 0x141b33); ground.position.set(0, -7.4, -4.5); g.add(ground);
-    // 纸箱（棕色矩形）+ 小猫（几何猫：圆头 + 矩形身 + 三角耳 + 圆眼）
-    const box = rect(2.1, 1.3, 0xc98a3e); box.position.set(-4.2, -4.3, -4.3); g.add(box);
+    // 透明瓶子（玻璃瓶：梯形瓶身 + 瓶口 + 高光；半透明材质），小猫关在里面
+    const jar = new THREE.Group(); jar.position.set(-3.7, -2.4, -4.2); g.add(jar); this.jar = jar;
+    const jarShape = new THREE.Shape();
+    jarShape.moveTo(-.62, -1.05); jarShape.lineTo(.62, -1.05); jarShape.lineTo(.5, 1.1); jarShape.lineTo(-.5, 1.1); jarShape.closePath();
+    const jarBody = geo(new THREE.ShapeGeometry(jarShape), 0x9fd8ff, { transparent: true, opacity: .22 });
+    jar.add(jarBody);
+    const jarRim = rect(1.25, .22, 0x8fc9e8, { transparent: true, opacity: .45 }); jarRim.position.y = 1.06; jar.add(jarRim);
+    const jarNeck = rect(.42, .5, 0x9fd8ff, { transparent: true, opacity: .18 }); jarNeck.position.y = 1.4; jar.add(jarNeck);
+    const jarShine = rect(.1, 1.5, 0xdff6ff, { transparent: true, opacity: .5 }); jarShine.position.set(-.34, -.1, .02); jar.add(jarShine);
+    // 瓶内空气气泡（小圆点，缓缓上浮）
+    this.bubbles = [];
+    for (let i = 0; i < 5; i++){
+      const b = circ(.06, 0xaee8ff, { transparent: true, opacity: .5 });
+      b.position.set(rand(-.32, .32), rand(-.7, .7), .04); jar.add(b);
+      this.bubbles.push(b);
+    }
+    // 小猫（几何猫：圆头 + 矩形身 + 三角耳 + 睁眼 + 微笑嘴），放在瓶内
     this.kitten = new THREE.Group();
-    const body = rect(.62, .7, 0xffb366); body.position.y = -.25; this.kitten.add(body);
-    const head = circ(.34, 0xffb366); head.position.y = .42; this.kitten.add(head);
-    for (const sx of [-.2, .2]){
-      const ear = tri(.22, .26, 0xffb366); ear.position.set(sx, .82, .05); this.kitten.add(ear);
+    const body = rect(.5, .6, 0xffb366); body.position.y = -.22; this.kitten.add(body);
+    const head = circ(.3, 0xffb366); head.position.y = .38; this.kitten.add(head);
+    for (const sx of [-.18, .18]){
+      const ear = tri(.2, .24, 0xffb366); ear.position.set(sx, .74, .05); this.kitten.add(ear);
     }
-    for (const sx of [-.12, .12]){
-      const eye = circ(.05, 0x2b2b3a); eye.position.set(sx, .48, .08); this.kitten.add(eye);
-    }
-    const nose = tri(.1, .08, 0xd94a4a); nose.position.set(0, .36, .08); this.kitten.add(nose);
-    this.kitten.position.set(-4.2, -3.6, -4.2); g.add(this.kitten);
-    // 圆形时钟（几何圆环 + 刻度线 + 数字 + 指针矩形）
-    this.clockRing = ring(1.9, 2.08, 0x5b6fc0);
-    this.clockRing.position.set(3.4, 2.6, -4.3); g.add(this.clockRing);
-    const cx = 3.4, cy = 2.6;
+    this.eyeL = circ(.045, 0x2b2b3a); this.eyeL.position.set(-.11, .44, .08); this.kitten.add(this.eyeL);
+    this.eyeR = circ(.045, 0x2b2b3a); this.eyeR.position.set(.11, .44, .08); this.kitten.add(this.eyeR);
+    this.eyeClL = rect(.1, .03, 0x2b2b3a); this.eyeClL.position.set(-.11, .43, .09); this.eyeClL.visible = false; this.kitten.add(this.eyeClL);
+    this.eyeClR = rect(.1, .03, 0x2b2b3a); this.eyeClR.position.set(.11, .43, .09); this.eyeClR.visible = false; this.kitten.add(this.eyeClR);
+    const m1 = lineSeg(-.07, .3, 0, .26, 0xd94a4a, .035); this.kitten.add(m1);
+    const m2 = lineSeg(0, .26, .07, .3, 0xd94a4a, .035); this.kitten.add(m2);
+    this.kitten.position.set(0, -.15, .03); jar.add(this.kitten);
+    // 圆形时钟：0 在最上，顺时针 1-9（刻度 + 数字 + 中心旋转的秒针）
+    this.clockCX = 3.6; this.clockCY = 2.6;
+    this.clockRing = ring(2.0, 2.18, 0x5b6fc0);
+    this.clockRing.position.set(this.clockCX, this.clockCY, -4.3); g.add(this.clockRing);
     for (let i = 0; i < 10; i++){
-      const a = i * Math.PI*2/10;
-      const tick = lineSeg(cx + Math.cos(a)*1.85, cy + Math.sin(a)*1.85, cx + Math.cos(a)*2.0, cy + Math.sin(a)*2.0, 0xffffff, .06);
+      const a = Math.PI / 2 - i * Math.PI * 2 / 10;  // 0 在最上（12 点），1-9 顺时针排布
+      const tick = lineSeg(this.clockCX + Math.cos(a) * 1.92, this.clockCY + Math.sin(a) * 1.92, this.clockCX + Math.cos(a) * 2.1, this.clockCY + Math.sin(a) * 2.1, 0xffffff, .06);
       tick.position.z = -4.2; g.add(tick);
-      const num = textSprite(String(i), { size: 44, color: '#9ee6ff', unit: .5, pad: 0 });
-      num.position.set(cx + Math.cos(a)*1.45, cy + Math.sin(a)*1.45, -4.2); g.add(num);
+      const num = textSprite(String(i), { size: 44, color: i === 0 ? '#ffd75e' : '#9ee6ff', unit: .5, pad: 0 });
+      num.position.set(this.clockCX + Math.cos(a) * 1.5, this.clockCY + Math.sin(a) * 1.5, -4.2); g.add(num);
     }
-    this.hand = rect(.12, 1.55, 0xff5a4d);
-    this.hand.position.set(cx, cy + .78, -4.2); g.add(this.hand);
-    this.clockBase = new THREE.Vector3(cx, cy, -4.2);
+    // 秒针：枢轴在表盘中心，绕中心顺时针旋转（不从中心乱移动）
+    this.handPivot = new THREE.Group();
+    this.handPivot.position.set(this.clockCX, this.clockCY, -4.2); g.add(this.handPivot);
+    const hand = rect(.12, 1.7, 0xff5a4d);
+    hand.position.set(0, .85, 0); this.handPivot.add(hand);
+    const handCap = circ(.12, 0xffd75e); handCap.position.z = .02; this.handPivot.add(handCap);
+    this.handPivot.rotation.z = 0;
     this.clockG = g;
   },
   start(level, afterEnd){
     this.afterEnd = afterEnd; this.level = level;
-    const cfg = [[7,5,[1,2]],[12,7,[1,2,5,-1,-2]],[18,9,[1,2,5,-1,-2,-3]]][level-1];
+    // 越难倒计时越久（全部 >60 秒）：[75,90,120]；目标越大：[7,12,18]
+    const cfg = [[7,75,[1,2]],[12,90,[1,2,5,-1,-2]],[18,120,[1,2,5,-1,-2,-3]]][level-1];
     this.V = randi(level === 1 ? 5 : (level === 2 ? 8 : 10), cfg[0]);
     this.airMax = cfg[1]; this.buttons = cfg[2];
-    this.value = 0; this.air = this.airMax; this.presses = 0; this.locked = false; this.won = false;
-    this.hand.position.set(this.clockBase.x, this.clockBase.y + .78, this.clockBase.z);
-    this.kitten.scale.set(1,1,1);
+    this.value = 0; this.presses = 0; this.locked = false; this.won = false;
+    this.air = this.airMax;
+    this.deadline = performance.now() + this.airMax * 1000;
+    this.handPivot.rotation.z = 0;
+    this.kitten.rotation.z = 0; this.kitten.position.set(0, -.15, .03); this.kitten.scale.set(1, 1, 1);
+    this.eyeL.visible = this.eyeR.visible = true; this.eyeClL.visible = this.eyeClR.visible = false;
+    if (this.timer) clearInterval(this.timer);
+    this.timer = setInterval(() => this.tick(), 1000);
     this.updateUI();
     this.buildUI();
+  },
+  tick(){
+    if (this.locked) return;
+    this.air = Math.max(0, Math.ceil((this.deadline - performance.now()) / 1000));
+    this.updateUI();
+    if (this.air <= 0 && this.value !== this.V){
+      this.locked = true;
+      setTimeout(() => this.fail(), 300);
+    }
   },
   updateUI(){
     const ones = this.value % 10, tens = Math.floor(this.value / 10);
     $('statusLine').innerHTML =
-      '目标 <b style="color:#ffd75e">' + this.V + ' 秒</b> · 时钟 <b style="color:#9ee6ff">' + tens + ' ' + ones + '</b> · 空气 <b style="color:#8fe8b0">' + this.air + '/' + this.airMax + '</b> · 按键 ' + this.presses + ' 次';
-    const a = this.value / 10 * Math.PI * 2;
-    this.hand.position.set(this.clockBase.x + Math.sin(a) * .78, this.clockBase.y + Math.cos(a) * .78, this.clockBase.z);
-    this.kitten.scale.setScalar(1 + Math.sin(performance.now()/400) * .03);
+      '目标 <b style="color:#ffd75e">' + this.V + '</b> · 时钟 <b style="color:#9ee6ff">' + tens + ' ' + ones + '</b> · 倒计时 <b style="color:#8fe8b0">' + this.air + ' 秒</b> · 按键 ' + this.presses + ' 次';
+    // 秒针绕中心顺时针旋转：0 在最上（12 点位置）
+    const a = (this.value % 10) / 10 * Math.PI * 2;
+    this.handPivot.rotation.z = -a;
+    const t = performance.now();
+    this.kitten.scale.setScalar(1 + Math.sin(t / 400) * .02);
+    for (let i = 0; i < this.bubbles.length; i++){
+      const b = this.bubbles[i];
+      b.position.y = -.55 + ((t / 1000) * .22 + i * .21) % 1 * 1.1;
+    }
   },
   press(v){
     if (this.locked) return;
     const prev = this.value;
     this.value += v;
     if (this.value < 0) this.value = 0;
-    this.presses++; this.air--;
+    this.presses++;  // 按键不消耗倒计时；拨动次数越少金币越多
     Sfx.tick();
-    gainCoins(2);
     const carry = (this.value % 10) < (prev % 10) && this.value > prev;
     const borrow = (this.value % 10) > (prev % 10) && this.value < prev;
     $('formula').textContent = (v > 0 ? '+' : '') + v + ' → ' + prev + ' ' + (v >= 0 ? '＋' : '−') + Math.abs(v) + ' ＝ ' + this.value + (carry ? '（十位进 1）' : (borrow ? '（十位退 1）' : ''));
     if (carry){ Sfx.coin(); toast('进 1！'); }
     if (borrow){ Sfx.tick(); toast('退 1！'); }
-    if (this.value === this.V){ this.locked = true; setTimeout(() => this.win(), 350); }
-    else if (this.air <= 0){ this.locked = true; setTimeout(() => this.fail(), 350); }
+    if (this.value === this.V){ this.locked = true; if (this.timer) clearInterval(this.timer); setTimeout(() => this.win(), 350); }
     this.updateUI();
   },
   win(){
     Sfx.meow(); Sfx.win();
-    tween(this.kitten.scale, { x: 1.4, y: 1.4, z: 1.4 }, .4, easeOut);
+    if (this.timer) clearInterval(this.timer);
+    this.eyeL.visible = this.eyeR.visible = true; this.eyeClL.visible = this.eyeClR.visible = false;
+    // 小猫成功跳出瓶子（上浮出瓶口 + 放大 + 开心）
+    tween(this.kitten.position, { y: 1.45, x: 0 }, .6, easeOut);
+    tween(this.kitten.scale, { x: 1.5, y: 1.5, z: 1.5 }, .5, easeOut);
+    tween(this.kitten.rotation, { z: .12 }, .5, easeOut);
     const minAll = minPresses(this.V, this.buttons);
+    const bonus = Math.max(0, minAll - this.presses + 1);  // 拨动秒针越少金币越多
+    const coins = 2 * this.level + bonus;
     const stars = this.level;
     SAVE.stars += stars;
     if ((SAVE.best[4][this.level-1] || 0) < stars) SAVE.best[4][this.level-1] = stars;
+    gainCoins(coins);
     persist();
-    showRating('时钟救援', stars, 0, this.afterEnd, '用了 ' + this.presses + ' 次按键');
+    showRating('空气猫', stars, 0, this.afterEnd, '用了 ' + this.presses + ' 次按键（最优 ' + minAll + ' 次）');
   },
   fail(){
-    Sfx.fail(); gainCoins(-1); toast('空气用完了…再试一次！（金币 −1）');
+    Sfx.fail(); gainCoins(-1); toast('倒计时结束，小猫躺下了…再试一次！（金币 −1）');
+    // 小猫在瓶内躺下 + 闭眼
+    this.eyeL.visible = this.eyeR.visible = false; this.eyeClL.visible = this.eyeClR.visible = true;
+    tween(this.kitten.rotation, { z: Math.PI / 2 }, .5, easeOut);
     setTimeout(() => {
       this.value = 0; this.air = this.airMax; this.presses = 0; this.locked = false;
+      this.deadline = performance.now() + this.airMax * 1000;
+      this.handPivot.rotation.z = 0;
+      this.kitten.rotation.z = 0; this.kitten.position.set(0, -.15, .03); this.kitten.scale.set(1, 1, 1);
+      this.eyeL.visible = this.eyeR.visible = true; this.eyeClL.visible = this.eyeClR.visible = false;
+      if (this.timer) clearInterval(this.timer);
+      this.timer = setInterval(() => this.tick(), 1000);
       this.updateUI();
-    }, 1200);
+    }, 1600);
   },
   buildUI(){
     clearUI();
@@ -1505,13 +1600,30 @@ const clockGame = {
       const cls = v > 0 ? 'green' : 'red';
       uiBtn((v > 0 ? '+' : '') + v, () => this.press(v), cls + ' small');
     }
-    uiMsg('把时钟凑到目标秒数，按键越少越好');
+    uiMsg('小猫关在瓶子里：拨动秒针转到目标数（0 在最上），倒计时内救出它！');
   },
-  end(){ clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; }
+  end(){
+    if (this.timer) clearInterval(this.timer);
+    clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = '';
+  }
 };
 
 
-/* ---------------- 游戏 6：方阵寻宝（2D 几何） ---------------- */
+/* ---------------- 游戏 6：毛毛虫回家（2D 几何） ---------------- */
+/* 毛毛虫工厂：圆头 + 分段身体 + 眼睛 + 触角 */
+function makeCaterpillar(color, s){
+  const gp = new THREE.Group();
+  const head = circ(.17, color); head.position.set(0, 0, .02); gp.add(head);
+  for (let i = 1; i <= 3; i++){
+    const seg = circ(.13, color); seg.position.set(-.16 * i, 0, .01); gp.add(seg);
+  }
+  const eyeL = circ(.03, 0x2b2b3a); eyeL.position.set(.07, .08, .06); gp.add(eyeL);
+  const eyeR = circ(.03, 0x2b2b3a); eyeR.position.set(.07, -.08, .06); gp.add(eyeR);
+  const antL = lineSeg(.08, .16, .14, .26, color, .03); gp.add(antL);
+  const antR = lineSeg(.08, -.16, .14, -.26, color, .03); gp.add(antR);
+  gp.scale.setScalar(s);
+  return gp;
+}
 const matrixG = makeGroup('matrix');
 const matrixGame = {
   init(){ const g = matrixG;
@@ -1529,100 +1641,131 @@ const matrixGame = {
     for (let r = 0; r < 10; r++){
       for (let c = 0; c < 10; c++){
         const tile = rect(.84, .84, 0x27335c);
-        tile.position.set(c - 4.5, r - 4.5, -4.3);
-        tile.userData.baseColor = 0x27335c;
+        tile.position.set(c - 4.5, 4.5 - r, -4.3);
         g.add(tile); this.tiles.push(tile);
-        const num = textSprite(String(r*10 + c), { size: 28, color: '#8fa2e8', unit: .42, pad: 0 });
-        num.position.set(c - 4.5, r - 4.5, -4.2); g.add(num);
+        const num = textSprite(String(r*10 + c), { size: 26, color: '#8fa2e8', unit: .4, pad: 0 });
+        num.position.set(c - 4.5, 4.5 - r, -4.2); g.add(num);
       }
     }
-    // 玩家（金色几何圆）
-    this.player = circ(.36, 0xffd75e);
-    this.player.position.set(-4.5, -4.5, -4.1);
+    // 洞穴（家）：洞口拱 + 洞身，目标格上
+    this.cave = new THREE.Group();
+    const caveBody = rect(1.1, 1.1, 0x0c1020); caveBody.position.y = -.12; this.cave.add(caveBody);
+    const arch = new THREE.Mesh(new THREE.CircleGeometry(.56, 24, Math.PI, Math.PI), new THREE.MeshBasicMaterial({ color: 0x0c1020 }));
+    arch.position.y = .44; this.cave.add(arch);
+    const rim = new THREE.Mesh(new THREE.CircleGeometry(.58, 24, Math.PI, Math.PI), new THREE.MeshBasicMaterial({ color: 0x5a3a22 }));
+    rim.position.y = .46; rim.scale.set(1.08, 1.1, 1); this.cave.add(rim);
+    this.cave.visible = false; g.add(this.cave);
+    // 妈妈毛毛虫（大号，守在洞口）
+    this.mama = makeCaterpillar(0x4fc95a, 1.25);
+    this.mama.scale.x = -1.25;  // 面向洞口方向
+    this.mama.visible = false; g.add(this.mama);
+    // 小毛毛虫（玩家）
+    this.player = makeCaterpillar(0x8fe06a, .72);
     g.add(this.player);
-    // 目标格（红色矩形边框）
-    this.targetTile = rect(.9, .9, 0xff5a4d, { transparent: true, opacity: .55 });
-    this.targetTile.visible = false;
-    g.add(this.targetTile);
+    // 白气（超步数失败时毛毛头顶冒气）
+    this.steam = new THREE.Group();
+    for (let i = 0; i < 3; i++){
+      const p = circ(.1, 0xffffff, { transparent: true, opacity: .8 });
+      p.position.set((i - 1) * .16, .18 + i * .1, .12);
+      this.steam.add(p);
+    }
+    this.steam.visible = false; g.add(this.steam);
+    // 爱心（相拥时显示）
+    this.heart = new THREE.Group();
+    const h1 = circ(.12, 0xff5a7a); h1.position.set(-.1, .08, 0); this.heart.add(h1);
+    const h2 = circ(.12, 0xff5a7a); h2.position.set(.1, .08, 0); this.heart.add(h2);
+    const h3 = tri(.26, .24, 0xff5a7a); h3.position.set(0, -.1, 0); this.heart.add(h3);
+    this.heart.visible = false; g.add(this.heart);
     this.matrixG = g;
   },
   start(level, afterEnd){
     this.afterEnd = afterEnd; this.level = level;
     this.Smax = level === 1 ? 1 : (level === 2 ? 3 : 5);
     this.S = 1;
-    this.score = 100; this.steps = 0; this.locked = false; this.won = false;
+    this.steps = 0; this.locked = false; this.won = false;
     do {
       this.P = randi(0, 99);
       if (level === 1){
         const dir = Math.random() < .5;
         const step = randi(1, 9);
-        this.T = dir ? Math.min(99, this.P + step) : Math.max(0, this.P - step);
         if (dir) this.T = this.P + Math.min(step, 9 - this.P % 10);
         else this.T = this.P - Math.min(step, this.P % 10);
       } else {
         this.T = randi(0, 99);
       }
     } while (this.T === this.P);
+    this.P0 = this.P;
+    this.maxSteps = Math.floor(Math.abs(this.T - this.P0) / this.S) + 1;
+    this.heart.visible = false;
     this.updateGrid();
     this.updateInfo();
     this.buildUI();
   },
   updateGrid(){
     const r = Math.floor(this.P / 10), c = this.P % 10;
-    this.player.position.set(c - 4.5, r - 4.5, -4.1);
+    this.player.position.set(c - 4.5, 4.5 - r, -4.05);
     const tr = Math.floor(this.T / 10), tc = this.T % 10;
-    this.targetTile.position.set(tc - 4.5, tr - 4.5, -4.2);
-    this.targetTile.visible = true;
+    this.cave.position.set(tc - 4.5, 4.5 - tr, -4.25);
+    this.cave.visible = true;
+    this.mama.position.set(tc - 4.5 + .34, 4.5 - tr, -4.1);
+    this.mama.visible = true;
+    this.heart.position.set(tc - 4.5, 4.5 - tr + .55, -4.0);
   },
   updateInfo(){
     $('statusLine').innerHTML =
-      '你在 <b style="color:#9ee6ff">' + this.P + '</b> · 目标 <b style="color:#ffd75e">' + this.T + '</b> · 步数 ' + this.steps + ' · 分数 <b style="color:#8fe8b0">' + this.score + '</b> · 步长 ' + this.S;
+      '洞穴入口 <b style="color:#ffd75e">' + this.T + '</b> · 毛毛在 <b style="color:#9ee6ff">' + this.P + '</b> · 步数 ' + this.steps + '/' + this.maxSteps + ' · 步长 ' + this.S;
   },
   move(dir){
     if (this.locked || this.won) return;
     const r = Math.floor(this.P / 10), c = this.P % 10;
     let np = this.P, label = '';
-    if (dir === 'left'){ if (c - this.S < 0){ this.oob(); return; } np = this.P - this.S; label = this.P + ' − ' + this.S + ' ＝ ' + np; }
-    else if (dir === 'right'){ if (c + this.S > 9){ this.oob(); return; } np = this.P + this.S; label = this.P + ' ＋ ' + this.S + ' ＝ ' + np; }
-    else if (dir === 'up'){ if (r - this.S < 0){ this.oob(); return; } np = this.P - 10 * this.S; label = this.P + ' − ' + (10*this.S) + ' ＝ ' + np; }
-    else if (dir === 'down'){ if (r + this.S > 9){ this.oob(); return; } np = this.P + 10 * this.S; label = this.P + ' ＋ ' + (10*this.S) + ' ＝ ' + np; }
+    if (dir === 'left'){ if (c - this.S < 0){ toast('到边上了，换个方向吧'); return; } np = this.P - this.S; label = this.P + ' − ' + this.S + ' ＝ ' + np; }
+    else if (dir === 'right'){ if (c + this.S > 9){ toast('到边上了，换个方向吧'); return; } np = this.P + this.S; label = this.P + ' ＋ ' + this.S + ' ＝ ' + np; }
+    else if (dir === 'up'){ if (r - this.S < 0){ toast('到边上了，换个方向吧'); return; } np = this.P - 10 * this.S; label = this.P + ' − ' + (10*this.S) + ' ＝ ' + np; }
+    else if (dir === 'down'){ if (r + this.S > 9){ toast('到边上了，换个方向吧'); return; } np = this.P + 10 * this.S; label = this.P + ' ＋ ' + (10*this.S) + ' ＝ ' + np; }
     this.P = np; this.steps++;
-    this.score -= Math.max(1, 5 - this.S);
-    Sfx.tick(); gainCoins(2);
+    this.player.scale.x = (dir === 'left' || dir === 'up') ? -.72 : .72;
+    Sfx.tick();
     this.updateGrid();
     $('formula').textContent = label;
     this.updateInfo();
     if (this.P === this.T){ this.won = true; this.locked = true; setTimeout(() => this.win(), 400); }
+    else if (this.steps >= this.maxSteps){ setTimeout(() => this.fail('步数用完，超过最大步数 ' + this.maxSteps + ' 了！'), 300); }
   },
-  oob(){
-    this.score = Math.max(0, this.score - 1);
-    gainCoins(-1);
-    toast('出界！扣 1 分（金币 −1）');
-    this.updateInfo();
-  },
-  hint(){
+  fail(msg){
     if (this.locked || this.won) return;
-    this.score = Math.max(0, this.score - 1);
-    Sfx.click();
-    const tr = Math.floor(this.T / 10), tc = this.T % 10;
-    for (const t of this.tiles){
-      if (Math.round(t.position.x + 4.5) === tc || Math.round(t.position.y + 4.5) === tr){
-        t.material = new THREE.MeshBasicMaterial({ color: 0x8fe8ff });
-      }
-    }
-    toast('高亮了目标的行与列（−1 分）');
+    this.locked = true;
+    Sfx.fail(); gainCoins(-1);
+    // 毛毛躺平 + 头顶冒白气
+    this.steam.position.set(this.player.position.x, this.player.position.y + .3, -4.0);
+    this.steam.visible = true;
+    tween(this.player.rotation, { z: Math.PI / 2 }, .4, easeOut);
+    tween(this.player.scale, { y: .45 }, .4, easeOut);
+    tween(this.steam.position, { y: this.player.position.y + 1.1 }, 1.0, easeOut);
+    toast(msg + '（金币 −1）');
     setTimeout(() => {
-      for (const t of this.tiles) t.material = new THREE.MeshBasicMaterial({ color: 0x27335c });
+      this.P = this.P0; this.steps = 0; this.locked = false;
+      this.maxSteps = Math.floor(Math.abs(this.T - this.P0) / this.S) + 1;
+      this.player.rotation.z = 0; this.player.scale.set(.72, .72, .72);
+      this.steam.visible = false;
+      this.updateGrid(); this.updateInfo();
     }, 1600);
-    this.updateInfo();
   },
   win(){
     Sfx.win();
+    const tr = Math.floor(this.T / 10), tc = this.T % 10;
+    // 毛毛到家，和妈妈相拥：妈妈迎上来，小毛毛贴上去，爱心出现
+    tween(this.mama.position, { x: tc - 4.5 - .14, y: 4.5 - tr }, .5, easeOut);
+    tween(this.player.position, { x: tc - 4.5 + .16, y: 4.5 - tr }, .5, easeOut);
+    this.heart.visible = true;
+    tween(this.heart.scale, { x: 1.25, y: 1.25, z: 1.25 }, .4, easeOut);
+    toast('毛毛回到家，和妈妈抱在一起啦！');
     const stars = this.level;
     SAVE.stars += stars;
     if ((SAVE.best[5][this.level-1] || 0) < stars) SAVE.best[5][this.level-1] = stars;
+    gainCoins(2 * this.level);
     persist();
-    showRating('方阵寻宝', stars, 0, this.afterEnd, '剩余 ' + this.score + ' 分');
+    showRating('毛毛虫回家', stars, 0, this.afterEnd, '用了 ' + this.steps + ' 步');
   },
   buildUI(){
     clearUI();
@@ -1631,22 +1774,22 @@ const matrixGame = {
     uiBtn('↑ 上', () => this.move('up'), 'small');
     uiBtn('↓ 下', () => this.move('down'), 'small');
     const row = document.createElement('div'); row.className = 'grow'; $('gameUI').appendChild(row);
-    for (let s = 1; s <= this.Smax; s++) uiBtn('步长 ' + s, () => { this.S = s; this.updateInfo(); }, 'tiny');
-    uiBtn('提示(−1分)', () => this.hint(), 'gold tiny');
+    for (let s = 1; s <= this.Smax; s++) uiBtn('步长 ' + s, () => { this.S = s; this.maxSteps = Math.floor(Math.abs(this.T - this.P0) / this.S) + 1; this.updateInfo(); }, 'tiny');
+    uiMsg('毛毛在 ' + this.P0 + '，洞穴入口在 ' + this.T + '：自由走，但超过最大步数 ' + this.maxSteps + ' 就失败。步长调小，最大步数会变多！');
   },
-  end(){ clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; this.targetTile.visible = false; }
+  end(){ clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; this.cave.visible = false; this.mama.visible = false; this.heart.visible = false; }
 };
 
 /* ---------------- 场景切换与流程 ---------------- */
 const gameInstances = [appleGame, crossGame, stairGame, shootGame, clockGame, matrixGame];
-const gameNames = ['摘苹果', '扶老奶奶过马路', '帮小男孩爬楼梯', '打靶', '时钟救援', '方阵寻宝'];
+const gameNames = ['摘苹果', '扶老奶奶过马路', '帮小男孩爬楼梯', '弹瓶盖', '空气猫', '毛毛虫回家'];
 const gameDescs = [
   '把树上的苹果摘到左边托盘，让天平平衡：右边砝码是多少，就摘多少个苹果。数字就是苹果的个数。',
   '按 ＋1/＋2/＋5 让老奶奶走过数轴，绿灯用光前到达终点。步数越少分越高。',
   '男孩在 F 层，要到 T 层。填上 ＋/− 和数字，让他到达目标楼层。',
-  '距离 ＋ 角度 ＝ 力度才能中 0 环（靶心最高分）。三次机会累计积分。',
-  '用 ＋/− 按钮把时钟凑到目标秒数。个位逢九进一、逢零退一。按键越少越好。',
-  '在 0–99 方阵里走到目标格。左减 S、右加 S、上减 10S、下加 10S。'
+  '滑动设力度弹瓶盖：力度 − 距离 ＝ 落点环数，差越小越靠近 0 环靶心。三次机会。',
+  '用 ＋/− 按钮拨动秒针转到目标数。个位逢九进一、逢零退一。按键越少越好。',
+  '毛毛虫要回家：0 在左上、99 在右下。步长不能大于到洞穴的差值，走过头会失败。'
 ];
 
 let activeName = 'world';
