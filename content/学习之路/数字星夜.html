@@ -12,6 +12,32 @@
   #hudTopL{display:flex;gap:10px;align-items:center}
   .pill{background:rgba(10,14,31,.72);border:1px solid rgba(255,255,255,.22);color:#ffe9b8;border-radius:999px;padding:6px 14px;font-size:16px;font-weight:700;backdrop-filter:blur(4px)}
   .pill b{color:#ffd75e}
+  /* ===== 奖励瓶罐（进制存储：个位铜、十位银、百位金、千位钻石） ===== */
+  .jarGroup{display:inline-flex;align-items:center;gap:3px;background:rgba(10,14,31,.72);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:5px 8px;backdrop-filter:blur(4px)}
+  .jarTag{display:inline-flex;flex-direction:column;align-items:center;gap:1px;margin-right:4px;font-size:11px;color:#ffe9b8;font-weight:700}
+  .jarTag i{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #fff3b0, #d4a017);border:1px solid #ffefb0}
+  .jar{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:30px;height:36px;border:2px solid rgba(255,255,255,.55);border-radius:7px 7px 12px 12px;background:rgba(255,255,255,.10);box-shadow:inset 0 -7px 0 rgba(255,255,255,.07);position:relative;transition:opacity .3s}
+  .jar b{font-size:15px;color:#fff;line-height:1;z-index:1;font-weight:900}
+  .jar .cap{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:16px;height:6px;border-radius:3px;background:rgba(255,255,255,.35)}
+  .jar .grain{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:10px;height:8px;border-radius:4px 4px 8px 8px;background:radial-gradient(circle at 50% 30%, #ffd9a0, #b87333);z-index:0;opacity:.9}
+  .jar.empty{opacity:.30}
+  .jar.empty .grain{display:none}
+  .jar.pop b{animation:jarPop .5s cubic-bezier(.2,2.4,.4,1)}
+  @keyframes jarPop{0%{transform:scale(1)}40%{transform:scale(1.7);color:#ffd75e}100%{transform:scale(1)}}
+  .jarT{background:radial-gradient(circle at 50% 30%, #ffd9a0, #b87333)}
+  .jarS{background:radial-gradient(circle at 50% 30%, #fff, #9aa4b1)}
+  .jarG{background:radial-gradient(circle at 50% 30%, #fff3b0, #d4a017)}
+  .jarD{background:radial-gradient(circle at 50% 30%, #dff6ff, #3ec1e8)}
+  /* ===== 奖励飘动 ===== */
+  .flyCoin,.flyStar{position:fixed;z-index:60;pointer-events:none;will-change:transform,opacity}
+  .flyCoin{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#3a2500;border:2px solid rgba(255,255,255,.85);box-shadow:0 0 10px rgba(255,215,94,.7)}
+  .flyCoin.copper{background:radial-gradient(circle at 35% 30%, #ffd9a0, #b87333);border-color:#ffd9a0}
+  .flyCoin.silver{background:radial-gradient(circle at 35% 30%, #fff, #9aa4b1);border-color:#fff;color:#334}
+  .flyCoin.gold{background:radial-gradient(circle at 35% 30%, #fff3b0, #d4a017);border-color:#ffefb0}
+  .flyCoin.dia{background:radial-gradient(circle at 35% 30%, #dff6ff, #3ec1e8);border-color:#e6f7ff;color:#064}
+  .flyStar{font-size:32px;line-height:1;color:#ffd75e;text-shadow:0 0 14px rgba(255,215,94,.95)}
+  .score{color:#aef2c9}
+  .score b{color:#8fe8b0}
   #backBtn{pointer-events:auto;background:#2f3b68;color:#fff;border:1px solid #5b6fc0;border-radius:10px;padding:8px 14px;font-size:15px;font-weight:700;cursor:pointer}
   #backBtn:hover{background:#3d4e9e}
   #statusLine{position:fixed;top:64px;left:0;right:0;z-index:20;text-align:center;pointer-events:none;font-size:22px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6)}
@@ -50,6 +76,22 @@
   .stars .off{color:#3a4468}
   #ratingCard .got{color:#9ee6ff;font-size:20px;font-weight:700}
   #hintLine{font-size:14px;color:#8fa2e8;margin-top:10px}
+  /* ===== 算式方框（数字格 + 加减符号 + 数字跳跃效果） ===== */
+  .calcBox{display:inline-block;min-width:52px;padding:5px 12px;margin:0 2px;border:2px solid #5b6fc0;border-radius:12px;background:rgba(10,14,31,.88);color:#fff;font-size:26px;font-weight:900;text-align:center;vertical-align:middle;box-shadow:0 2px 0 rgba(0,0,0,.35) inset}
+  .calcBox.sm{min-width:38px;padding:2px 9px;font-size:20px;border-radius:9px}
+  .calcBox.gold{color:#ffd75e;border-color:#ffd98a}
+  .calcBox.jump{animation:calcJump .55s cubic-bezier(.2,2.4,.4,1)}
+  .calcOp{display:inline-block;min-width:46px;font-size:32px;font-weight:900;color:#ffd75e;text-align:center;vertical-align:middle;text-shadow:0 0 14px rgba(255,215,94,.55)}
+  .calcEq{display:inline-block;min-width:34px;font-size:28px;font-weight:900;color:#9ee6ff;text-align:center;vertical-align:middle;text-shadow:0 0 10px rgba(158,230,255,.4)}
+  @keyframes calcJump{
+    0%{transform:translateY(0) scale(1)}
+    35%{transform:translateY(-11px) scale(1.3);color:#ffd75e;border-color:#ffd98a;background:rgba(64,76,140,.9);box-shadow:0 0 20px rgba(255,217,138,.85)}
+    70%{transform:translateY(2px) scale(.97)}
+    100%{transform:translateY(0) scale(1)}
+  }
+  #ratingCard{position:relative}
+  .closeX{position:absolute;top:10px;right:12px;background:rgba(255,255,255,.12);color:#dfe6ff;border:1px solid rgba(255,255,255,.3);border-radius:50%;width:42px;height:42px;font-size:24px;line-height:1;cursor:pointer;z-index:2;touch-action:manipulation}
+  .closeX:hover{background:rgba(255,255,255,.28);color:#fff}
   /* ===== 手机 / 窄屏适配 ===== */
   #backBtn{touch-action:manipulation}
   @media (max-width: 760px){
@@ -61,6 +103,16 @@
     .lvlBtn{padding:11px 16px;font-size:17px}
     .bigBtn{width:100%;max-width:320px;padding:16px 20px;font-size:21px}
     #hud{padding:8px 10px;padding-top:calc(8px + env(safe-area-inset-top))}
+    .jarGroup{gap:2px;padding:4px 6px;border-radius:11px}
+    .jar{width:24px;height:30px;border-radius:5px 5px 10px 10px}
+    .jar b{font-size:12px}
+    .jar .cap{width:12px;height:5px}
+    .jar .grain{width:8px;height:6px}
+    .jarTag{font-size:10px;margin-right:2px}
+    .jarTag i{width:10px;height:10px}
+    .flyCoin{width:20px;height:20px;font-size:10px}
+    .flyStar{font-size:25px}
+    .score{padding:4px 9px;font-size:14px}
     .pill{font-size:14px;padding:5px 11px}
     #backBtn{font-size:13px;padding:8px 10px;border-radius:9px}
     #statusLine{top:52px;font-size:17px;padding:0 8px}
@@ -73,6 +125,11 @@
     .gmsg{font-size:16px;padding:8px 12px}
     .stars{font-size:36px}
     #ratingCard .got{font-size:17px}
+    .calcBox{min-width:42px;padding:4px 9px;font-size:22px;border-radius:10px}
+    .calcBox.sm{min-width:32px;padding:1px 7px;font-size:17px}
+    .calcOp{min-width:38px;font-size:26px}
+    .calcEq{min-width:26px;font-size:23px}
+    .closeX{width:38px;height:38px;font-size:21px}
   }
   @media (max-height: 520px) and (orientation: landscape){
     .card{max-height:94vh;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px 20px}
@@ -92,8 +149,21 @@
 
 <div id="hud">
   <div id="hudTopL">
-    <div class="pill">金币 <b id="coinVal">0</b></div>
-    <div class="pill">星星 <b id="starVal">0</b></div>
+    <div class="jarGroup" id="coinJars" title="金币：个位铜、十位银、百位金、千位钻石">
+      <span class="jarTag"><i></i>金币</span>
+      <span class="jar" data-lv="3"><span class="cap"></span><span class="grain jarD"></span><b>0</b></span>
+      <span class="jar" data-lv="2"><span class="cap"></span><span class="grain jarG"></span><b>0</b></span>
+      <span class="jar" data-lv="1"><span class="cap"></span><span class="grain jarS"></span><b>0</b></span>
+      <span class="jar" data-lv="0"><span class="cap"></span><span class="grain jarT"></span><b>0</b></span>
+    </div>
+    <div class="jarGroup" id="starJars" title="星星：个位铜、十位银、百位金、千位钻石">
+      <span class="jarTag">★ 星星</span>
+      <span class="jar" data-lv="3"><span class="cap"></span><span class="grain jarD"></span><b>0</b></span>
+      <span class="jar" data-lv="2"><span class="cap"></span><span class="grain jarG"></span><b>0</b></span>
+      <span class="jar" data-lv="1"><span class="cap"></span><span class="grain jarS"></span><b>0</b></span>
+      <span class="jar" data-lv="0"><span class="cap"></span><span class="grain jarT"></span><b>0</b></span>
+    </div>
+    <div class="pill score" title="游戏局数：每玩一局 +1">局数 <b id="scoreVal">0</b></div>
   </div>
   <button id="backBtn" style="display:none">返回夜空</button>
 </div>
@@ -125,6 +195,7 @@
 
 <div id="ratingScreen" class="overlay hidden">
   <div class="card" id="ratingCard">
+    <button id="closeRating" class="closeX" title="关闭并回到游戏">×</button>
     <h2 id="ratingTitle">完成！</h2>
     <div class="stars" id="ratingStars"></div>
     <div class="got" id="ratingGot"></div>
@@ -258,15 +329,102 @@ function minPresses(target, coins){
 }
 
 /* 存档 */
-let SAVE = { coins: 0, stars: 0, best: [[],[],[],[],[],[]] };
+let SAVE = { coins: 0, stars: 0, score: 0, best: [[],[],[],[],[],[]] };
 try {
   const raw = localStorage.getItem('numstarry_save');
-  if (raw) { const p = JSON.parse(raw); if (p && typeof p.coins === 'number') SAVE = p; }
+  if (raw) { const p = JSON.parse(raw); if (p && typeof p.coins === 'number'){ SAVE = p; if (typeof SAVE.score !== 'number') SAVE.score = 0; } }
 } catch(e){}
 function persist(){ try { localStorage.setItem('numstarry_save', JSON.stringify(SAVE)); } catch(e){} }
+/* 进制拆分：个位铜、十位银、百位金、千位钻石（每级 0–9，满 10 进上一级） */
+function splitNum(n){ n = Math.max(0, Math.floor(n) || 0); return [n % 10, Math.floor(n/10) % 10, Math.floor(n/100) % 10, Math.floor(n/1000) % 10]; }
+let _lastCoins = -1, _lastStars = -1;
 function refreshHud(){
-  $('coinVal').textContent = SAVE.coins;
-  $('starVal').textContent = SAVE.stars;
+  $('scoreVal').textContent = SAVE.score || 0;
+  const c = splitNum(SAVE.coins), s = splitNum(SAVE.stars);
+  const cbs = document.querySelectorAll('#coinJars .jar b');
+  const sbs = document.querySelectorAll('#starJars .jar b');
+  const order = [3, 2, 1, 0]; // DOM 顺序：钻石、金、银、铜 ← splitNum 索引 3,2,1,0
+  for (let i = 0; i < 4; i++){
+    const lv = order[i];
+    // 金币从个位开始放：个位罐始终显示数字，高位罐仅当该位或更高位有值时显示
+    let showNum = lv === 0;
+    for (let j = lv; j <= 3; j++){ if (c[j] !== 0) showNum = true; }
+    const jar = cbs[i].parentElement;
+    const old = _lastCoins >= 0 ? splitNum(_lastCoins)[lv] : -1;
+    cbs[i].textContent = showNum ? c[lv] : '';
+    jar.classList.toggle('empty', c[lv] === 0);
+    if (_lastCoins >= 0 && showNum && c[lv] !== old){
+      jar.classList.remove('pop'); void jar.offsetWidth; jar.classList.add('pop');
+    }
+    let sShow = lv === 0;
+    for (let j = lv; j <= 3; j++){ if (s[j] !== 0) sShow = true; }
+    const sjar = sbs[i].parentElement;
+    const sold = _lastStars >= 0 ? splitNum(_lastStars)[lv] : -1;
+    sbs[i].textContent = sShow ? s[lv] : '';
+    sjar.classList.toggle('empty', s[lv] === 0);
+    if (_lastStars >= 0 && sShow && s[lv] !== sold){
+      sjar.classList.remove('pop'); void sjar.offsetWidth; sjar.classList.add('pop');
+    }
+  }
+  _lastCoins = SAVE.coins; _lastStars = SAVE.stars;
+}
+/* 操作级金币：正确计算 +2 金币（飘到金币罐），错误 −1 金币（不低于 0） */
+function gainCoins(n){
+  const before = SAVE.coins;
+  SAVE.coins = Math.max(0, (SAVE.coins || 0) + n);
+  if (SAVE.coins !== before){ persist(); refreshHud(); }
+  if (n > 0) flyCoins(n);
+}
+function flyCoins(n){
+  const cg = document.getElementById('coinJars').getBoundingClientRect();
+  const ox = window.innerWidth / 2, oy = window.innerHeight / 2;
+  const tx = cg.left + cg.width / 2, ty = cg.top + cg.height / 2;
+  for (let i = 0; i < Math.min(n, 6); i++){
+    const el = document.createElement('div');
+    el.className = 'flyCoin copper';
+    el.textContent = '铜';
+    el.style.left = (ox + (Math.random() * 40 - 20)) + 'px';
+    el.style.top = (oy + (Math.random() * 30 - 15)) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => {
+      el.style.transition = 'transform .85s cubic-bezier(.18,.75,.3,1), opacity .85s';
+      el.style.transform = 'translate(' + (tx - parseFloat(el.style.left) + (Math.random() * 22 - 11)) + 'px,' + (ty - parseFloat(el.style.top) + (Math.random() * 22 - 11)) + 'px) scale(.35)';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 900);
+    }, i * 40);
+  }
+}
+/* 奖励飘动：金币/星星图标从结算卡片飞向 HUD 瓶罐，飘完刷新计数 */
+function rewardFly(coins, stars, done){
+  const card = document.getElementById('ratingCard');
+  const cg = document.getElementById('coinJars').getBoundingClientRect();
+  const sg = document.getElementById('starJars').getBoundingClientRect();
+  const ox = window.innerWidth / 2, oy = window.innerHeight / 2 - 40;
+  const cx = cg.left + cg.width / 2, cy = cg.top + cg.height / 2;
+  const sx = sg.left + sg.width / 2, sy = sg.top + sg.height / 2;
+  const tierName = ['copper', 'silver', 'gold', 'dia'];
+  const c = splitNum(coins), s = splitNum(stars);
+  const items = [];
+  for (let lv = 0; lv < 4; lv++) for (let i = 0; i < c[lv]; i++) items.push({ kind: 'coin', cls: tierName[lv] });
+  for (let i = 0; i < Math.min(stars, 9); i++) items.push({ kind: 'star' });
+  if (items.length === 0){ if (done) done(); return; }
+  items.forEach((it, idx) => {
+    const el = document.createElement('div');
+    el.className = it.kind === 'star' ? 'flyStar' : 'flyCoin ' + it.cls;
+    el.textContent = it.kind === 'star' ? '★' : (it.cls === 'copper' ? '铜' : it.cls === 'silver' ? '银' : it.cls === 'gold' ? '金' : '钻');
+    el.style.left = (ox + (Math.random() * 120 - 60)) + 'px';
+    el.style.top = (oy + (Math.random() * 60 - 30)) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => {
+      const tx = (it.kind === 'star' ? sx : cx) + (Math.random() * 26 - 13);
+      const ty = (it.kind === 'star' ? sy : cy) + (Math.random() * 26 - 13);
+      el.style.transition = 'transform 1s cubic-bezier(.18,.75,.3,1), opacity 1s';
+      el.style.transform = 'translate(' + (tx - parseFloat(el.style.left)) + 'px,' + (ty - parseFloat(el.style.top)) + 'px) scale(.35) rotate(' + (Math.random() * 60 - 30) + 'deg)';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 1050);
+    }, idx * 50);
+  });
+  setTimeout(() => { if (done) done(); }, items.length * 50 + 1150);
 }
 
 /* ---------------- 2D 几何图形工厂 ---------------- */
@@ -558,8 +716,9 @@ function applePos(i){
   const n = lower ? 8 : 7;
   const k = lower ? i : i - 8;
   const a = (k + (lower ? 0 : .5)) * Math.PI * 2 / n;
-  const r = lower ? 1.95 : 1.75;
-  return new THREE.Vector3(-4.2 + Math.cos(a) * r, Math.sin(a) * r * .95, 0);
+  // 苹果环中心对齐树冠中部（世界 y=-2.5），两环半径放大、彼此错开，露出绿色树冠
+  const r = lower ? 1.62 : 1.45;
+  return new THREE.Vector3(-4.2 + Math.cos(a) * r, -2.5 + Math.sin(a) * r * .95, 0);
 }
 
 const appleG = makeGroup('apple');
@@ -577,9 +736,9 @@ const appleGame = {
     // 太阳（黄色圆）
     const sun = circ(1.5, 0xffe9a3); sun.position.set(-11.5, 5.6, -4.8); g.add(sun);
     const sunGlow = circ(2.1, 0xffe9a3, { transparent: true, opacity: .25 }); sunGlow.position.set(-11.5, 5.6, -4.9); g.add(sunGlow);
-    // 草地（绿色矩形）+ 远山（三角形）
-    const ground = rect(40, 9, 0x2f8a4e); ground.position.set(0, -4.5, -4.7); g.add(ground);
-    const ground2 = rect(40, 1.2, 0x256b3c); ground2.position.set(0, -8.4, -4.6); g.add(ground2);
+    // 草地（土色矩形）+ 远山（三角形）
+    const ground = rect(40, 9, 0x8a6a44); ground.position.set(0, -4.5, -4.7); g.add(ground);
+    const ground2 = rect(40, 1.2, 0x6b5233); ground2.position.set(0, -8.4, -4.6); g.add(ground2);
     for (let i = 0; i < 5; i++){
       const h = tri(rand(3, 5), rand(2, 3.4), 0x3f7a5a);
       h.position.set(rand(-18, 18), -3.2, -4.6); g.add(h);
@@ -613,15 +772,15 @@ const appleGame = {
       const c2 = tri(.8, .7, 0x37a35a); c2.position.y = .9; dt.add(c2);
       dt.position.set(p[0], p[1], -4.4); g.add(dt);
     }
-    // 主角苹果树（矩形树干 + 两层三角树冠）
+    // 主角苹果树（加粗树干 + 大号矩形树冠 + 三角尖顶，整圈苹果挂在树冠上）
     const tree = new THREE.Group();
-    const trunk = rect(.55, 2.6, 0x6b4a30); trunk.position.y = -1.5; tree.add(trunk);
-    const branch = lineSeg(-.1, -.6, .7, -.15, 0x6b4a30, .1); tree.add(branch);
-    const c1 = tri(2.6, 1.9, 0x2f8a4c); c1.position.y = .15; tree.add(c1);
-    const c2 = tri(1.7, 1.5, 0x37a35a); c2.position.y = 1.15; tree.add(c2);
-    const c3 = tri(1.1, 1.1, 0x3fae62); c3.position.y = 2.0; tree.add(c3);
+    const trunk = rect(.85, 3.3, 0x6b4a30); trunk.position.y = -1.9; tree.add(trunk);
+    const branch = lineSeg(-.14, -.8, 1.05, -.2, 0x6b4a30, .13); tree.add(branch);
+    const crown = rect(4.4, 3.0, 0x2f8a4c); crown.position.y = .1; tree.add(crown);
+    const c2 = tri(2.3, 1.6, 0x37a35a); c2.position.y = 1.9; tree.add(c2);
+    const c3 = tri(1.3, 1.3, 0x3fae62); c3.position.y = 3.0; tree.add(c3);
     tree.position.set(-4.2, -2.7, -4.5); g.add(tree);
-    // 15 个苹果（红色几何圆，树冠外侧上下两层环）
+    // 15 个苹果（红色几何圆，两环分散，全部落在树冠范围内、叠显在树冠上）
     this.apples = [];
     for (let i = 0; i < 15; i++){
       const m = circ(.36, 0xe0442e);
@@ -631,10 +790,11 @@ const appleGame = {
       m.userData.idx = i;
       g.add(m); this.apples.push(m);
     }
-    // 天平称：立柱矩形 + 横梁（绕中心转）+ 托盘 + 金色砝码（数字＝需要数）
+    // 天平称：深棕立柱（与土色有明显色差）+ 立柱顶端横向支撑 + 横梁（绕中心转）+ 灰蓝托盘 + 金色砝码（数字＝需要数）
     const scale = new THREE.Group(); scale.position.set(2.2, -2.7, -4.2);
-    const base = rect(1.5, .3, 0x8a6a3c); base.position.y = .12; scale.add(base);
-    const post = rect(.34, 3.0, 0x8a6a3c); post.position.y = 1.75; scale.add(post);
+    const base = rect(1.5, .3, 0x5a3a22); base.position.y = .12; scale.add(base);
+    const post = rect(.34, 3.0, 0x5a3a22); post.position.y = 1.75; scale.add(post);
+    const headBar = rect(1.3, .26, 0x5a3a22); headBar.position.y = 3.1; scale.add(headBar);
     const top = circ(.26, 0xffc94d); top.position.y = 3.32; scale.add(top);
     // 横梁
     const beam = new THREE.Group(); beam.position.set(0, 3.0, 0);
@@ -651,7 +811,7 @@ const appleGame = {
       const p = new THREE.Group();
       const s = new THREE.Shape();
       s.moveTo(-.75, 0); s.lineTo(.75, 0); s.lineTo(.5, -.3); s.lineTo(-.5, -.3); s.closePath();
-      const bowl = geo(new THREE.ShapeGeometry(s), 0xc98a3e);
+      const bowl = geo(new THREE.ShapeGeometry(s), 0x49576b);
       p.add(bowl);
       scale.add(p);
       return p;
@@ -700,6 +860,7 @@ const appleGame = {
     this.weightNum.material.needsUpdate = true;
     this.tiltT = clamp((this.X - this.N) * .18, -.4, .4);
     this.bounceT = undefined;
+    renderCalc(0, '＋', 0, 0, null);
     this.updateStatus();
     this.drag = new THREE.DragControls(this.apples, camera, renderer.domElement);
     const self = this;
@@ -719,6 +880,7 @@ const appleGame = {
         const dx = a.position.x - self.panC.x, dy = a.position.y - self.panC.y;
         if (Math.hypot(dx, dy) < 1.9){
           Sfx.drop(); self.addToPan(a);
+          if (self.X <= self.N) gainCoins(2);
         } else {
           tween(a.position, a.userData.home, .25, easeOut);
         }
@@ -746,8 +908,10 @@ const appleGame = {
   },
   addToPan(a){
     this.onTree = this.onTree.filter(x => x !== a);
+    const prev = this.X;
     this.dropIntoPan(a);
     this.X++;
+    renderCalc(prev, '＋', 1, this.X, 'c');
     this.updateStatus();
   },
   pickGroup(n){
@@ -758,7 +922,10 @@ const appleGame = {
       this.addToPan(a);
       taken++;
     }
-    if (taken > 0) Sfx.drop();
+    if (taken > 0){
+      Sfx.drop();
+      if (this.X <= this.N) gainCoins(2);
+    }
   },
   updateStatus(){
     const st = $('statusLine');
@@ -768,11 +935,13 @@ const appleGame = {
     if (x < n){ word = '苹果轻，再放几个'; color = '#ffd75e'; }
     else if (x > n){ word = '苹果太重了！'; color = '#ff8a7a'; }
     else { word = '平衡啦！'; color = '#8fe8b0'; }
-    st.innerHTML = '左边托盘 <b style="color:#fff">' + x + '</b> 个苹果 · 砝码 <b style="color:#ffd75e">' + n + '</b> — <b style="color:' + color + '">' + word + '</b>';
+    const jX = x !== this._lastX ? ' jump' : '';
+    st.innerHTML = '左边托盘 <span class="calcBox sm' + jX + '">' + x + '</span> 个苹果 · 砝码 <span class="calcBox sm gold">' + n + '</span> — <b style="color:' + color + '">' + word + '</b>';
+    this._lastX = x;
     this.balanceWord.material.map = textSprite(word, { size: 60, color: color, unit: 1.5, bg: 'rgba(10,14,31,.7)', pad: 10 }).material.map;
     this.balanceWord.material.needsUpdate = true;
     if (x === n && !this.won){ this.won = true; setTimeout(() => this.celebrate(), 450); }
-    if (x > n && !this.locked){ this.locked = true; this.retries++; Sfx.fail(); toast('太重了！苹果比砝码重，重新开始'); setTimeout(() => this.restartPick(), 1300); }
+    if (x > n && !this.locked){ this.locked = true; this.retries++; Sfx.fail(); gainCoins(-1); toast('太重了！苹果比砝码重，重新开始（金币 −1）'); setTimeout(() => this.restartPick(), 1300); }
   },
   restartPick(){
     for (const a of this.apples){
@@ -783,6 +952,7 @@ const appleGame = {
     this.panSlots = [];
     this.X = 0; this.locked = false; this.won = false;
     this.tiltT = clamp((0 - this.N) * .18, -.4, .4);
+    renderCalc(0, '＋', 0, 0, null);
     this.updateStatus();
   },
   celebrate(){
@@ -793,22 +963,17 @@ const appleGame = {
   },
   finishWin(){
     this.locked = true;
-    const stars = this.retries === 0 ? 3 : (this.retries <= 1 ? 2 : 1);
-    const coins = 10 + (stars - 1) * 5;
-    SAVE.coins += coins; SAVE.stars += stars;
+    const stars = this.level;
+    SAVE.stars += stars;
     if (!SAVE.best[0] || (SAVE.best[0][this.level-1] || 0) < stars){ (SAVE.best[0] = SAVE.best[0] || []); SAVE.best[0][this.level-1] = stars; }
-    persist(); refreshHud();
-    showRating('摘苹果', stars, coins, this.afterEnd);
+    persist();
+    showRating('摘苹果', stars, 0, this.afterEnd);
   },
   buildUI(){
     clearUI();
-    if (this.pickStep > 1){
-      for (let i = 1; i <= this.pickStep; i++){
-        uiBtn('摘 ' + i + ' 个', () => this.pickGroup(i), 'gold');
-      }
-      uiMsg('点按钮一次摘几个苹果，放到左边托盘，让天平平衡');
-    } else {
-      uiMsg('拖动树上的苹果到左边托盘，直到天平平衡（两边一样高）');
+    uiMsg('点“摘苹果”按钮，或直接拖动树上的苹果到左边托盘，直到天平平衡');
+    for (let i = 1; i <= Math.max(1, this.pickStep); i++){
+      uiBtn('摘 ' + i + ' 个', () => this.pickGroup(i), 'gold');
     }
   },
   update(dt, t){
@@ -836,7 +1001,7 @@ const appleGame = {
     this.chainL.position.set(px - arm*cosT, (py - arm*sinT) + .95, 0);
     this.chainR.position.set(px + arm*cosT, (py + arm*sinT) + .95, 0);
   },
-  end(){ if (this.drag && this.drag.dispose) this.drag.dispose(); clearUI(); $('statusLine').innerHTML = ''; }
+  end(){ if (this.drag && this.drag.dispose) this.drag.dispose(); clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; }
 };
 
 
@@ -919,6 +1084,7 @@ const crossGame = {
     const to = Math.min(this.dist, this.pos + v);
     this.pos = to; this.presses++; this.green--;
     Sfx.tick();
+    gainCoins(2);
     const sx = -4.5 + to * this.spacing;
     tween(this.grandma.position, { x: sx }, .3, easeOut, () => {
       this.grandma.rotation.z = Math.sin(performance.now()/80) * .06;
@@ -932,17 +1098,17 @@ const crossGame = {
     Sfx.win();
     tween(this.grandma.rotation, { z: 0 }, .2, easeOut);
     const min = minPresses(this.dist, this.buttons);
-    const stars = this.presses === min ? 3 : (this.greenMax - this.presses >= Math.ceil(this.greenMax/2) ? 2 : 1);
-    const coins = 10 + (stars - 1) * 5;
-    SAVE.coins += coins; SAVE.stars += stars;
+    const stars = this.level;
+    SAVE.stars += stars;
     if ((SAVE.best[1][this.level-1] || 0) < stars) SAVE.best[1][this.level-1] = stars;
-    persist(); refreshHud();
-    showRating('扶老奶奶过马路', stars, coins, this.afterEnd);
+    persist();
+    showRating('扶老奶奶过马路', stars, 0, this.afterEnd);
   },
   fail(){
     Sfx.boom();
     this.redLamp.material.color.setHex(0xff4a3d); this.greenLamp.material.color.setHex(0x2f3a2c);
-    toast('红灯！汽车来了…老奶奶被风吹回起点');
+    gainCoins(-1);
+    toast('红灯！汽车来了…老奶奶被风吹回起点（金币 −1）');
     tween(this.car.position, { x: 1 }, .8, easeInOut, () => {
       Sfx.fail();
       this.car.position.x = 14;
@@ -1053,24 +1219,24 @@ const stairGame = {
     if (this.locked) return;
     if (this.phase === 1){
       if (this.F + n !== this.mid){ this.wrong(); return; }
-      this.locked = true; Sfx.whoosh();
+      this.locked = true; Sfx.whoosh(); gainCoins(2);
       tween(this.boy.position, { y: -7.2 + (this.mid - 1) * 1.6 }, .8, easeInOut, () => {
         this.phase = 2; this.locked = false; this.nVal = undefined;
         this.updateInfo(); this.buildUI();
       });
     } else if (this.phase === 2){
       if (this.mid - n !== this.T){ this.wrong(); return; }
-      this.locked = true; Sfx.whoosh();
+      this.locked = true; Sfx.whoosh(); gainCoins(2);
       tween(this.boy.position, { y: -7.2 + (this.T - 1) * 1.6 }, .8, easeInOut, () => this.win());
     } else {
       const ok = this.sign === '+' ? (this.F + n === this.T) : (this.F - n === this.T);
       if (!ok){ this.wrong(); return; }
-      this.locked = true; Sfx.whoosh();
+      this.locked = true; Sfx.whoosh(); gainCoins(2);
       tween(this.boy.position, { y: -7.2 + (this.T - 1) * 1.6 }, .8, easeInOut, () => this.win());
     }
   },
   wrong(){
-    this.errors++; Sfx.cry(); this.setFace('cry');
+    this.errors++; Sfx.cry(); this.setFace('cry'); gainCoins(-1);
     tween(this.boy.scale, { x: 1.15, y: .9, z: 1.15 }, .12, null, () => tween(this.boy.scale, { x: 1, y: 1, z: 1 }, .18, easeOut, () => this.setFace('happy')));
     if (this.errors >= 2){
       let hint;
@@ -1083,12 +1249,11 @@ const stairGame = {
   },
   win(){
     Sfx.laugh(); this.setFace('happy');
-    const stars = this.errors === 0 ? 3 : (this.errors <= 1 ? 2 : 1);
-    const coins = 10 + (stars - 1) * 5;
-    SAVE.coins += coins; SAVE.stars += stars;
+    const stars = this.level;
+    SAVE.stars += stars;
     if ((SAVE.best[2][this.level-1] || 0) < stars) SAVE.best[2][this.level-1] = stars;
-    persist(); refreshHud();
-    showRating('帮小男孩爬楼梯', stars, coins, this.afterEnd);
+    persist();
+    showRating('帮小男孩爬楼梯', stars, 0, this.afterEnd);
   },
   buildUI(){
     clearUI();
@@ -1200,11 +1365,11 @@ const shootGame = {
     const st = $('statusLine');
     if (!isHit){
       st.innerHTML = '脱靶！0 分（力度 ' + this.F + '，有效值 ' + E + '）';
-      Sfx.fail();
+      Sfx.fail(); gainCoins(-1);
     } else {
       const score = 10 - ring;
       this.total += score;
-      Sfx.coin();
+      Sfx.coin(); gainCoins(2);
       st.innerHTML = '命中 <b style="color:#ffd75e">' + ring + ' 环</b> ＋' + score + ' 分 · 本轮累计 <b>' + this.total + '</b>';
     }
     $('formula').textContent = '有效值 ＝ 力度 − 距离 − 角度 ＝ ' + this.F + ' − ' + this.D + ' − ' + this.A + ' ＝ ' + E;
@@ -1214,12 +1379,11 @@ const shootGame = {
     }, 1600);
   },
   finish(){
-    const stars = this.total >= 25 ? 3 : (this.total >= 18 ? 2 : 1);
-    const coins = 10 + (stars - 1) * 5;
-    SAVE.coins += coins; SAVE.stars += stars;
+    const stars = this.level;
+    SAVE.stars += stars;
     if ((SAVE.best[3][this.level-1] || 0) < stars) SAVE.best[3][this.level-1] = stars;
-    persist(); refreshHud();
-    showRating('打靶', stars, coins, this.afterEnd, '总积分 ' + this.total + ' / 30');
+    persist();
+    showRating('打靶', stars, 0, this.afterEnd, '总积分 ' + this.total + ' / 30');
   },
   buildUI(){
     clearUI();
@@ -1308,6 +1472,7 @@ const clockGame = {
     if (this.value < 0) this.value = 0;
     this.presses++; this.air--;
     Sfx.tick();
+    gainCoins(2);
     const carry = (this.value % 10) < (prev % 10) && this.value > prev;
     const borrow = (this.value % 10) > (prev % 10) && this.value < prev;
     $('formula').textContent = (v > 0 ? '+' : '') + v + ' → ' + prev + ' ' + (v >= 0 ? '＋' : '−') + Math.abs(v) + ' ＝ ' + this.value + (carry ? '（十位进 1）' : (borrow ? '（十位退 1）' : ''));
@@ -1321,15 +1486,14 @@ const clockGame = {
     Sfx.meow(); Sfx.win();
     tween(this.kitten.scale, { x: 1.4, y: 1.4, z: 1.4 }, .4, easeOut);
     const minAll = minPresses(this.V, this.buttons);
-    const stars = this.presses <= minAll + 1 ? 3 : (this.presses <= this.airMax - 1 ? 2 : 1);
-    const coins = 10 + (stars - 1) * 5;
-    SAVE.coins += coins; SAVE.stars += stars;
+    const stars = this.level;
+    SAVE.stars += stars;
     if ((SAVE.best[4][this.level-1] || 0) < stars) SAVE.best[4][this.level-1] = stars;
-    persist(); refreshHud();
-    showRating('时钟救援', stars, coins, this.afterEnd, '用了 ' + this.presses + ' 次按键');
+    persist();
+    showRating('时钟救援', stars, 0, this.afterEnd, '用了 ' + this.presses + ' 次按键');
   },
   fail(){
-    Sfx.fail(); toast('空气用完了…再试一次！');
+    Sfx.fail(); gainCoins(-1); toast('空气用完了…再试一次！（金币 −1）');
     setTimeout(() => {
       this.value = 0; this.air = this.airMax; this.presses = 0; this.locked = false;
       this.updateUI();
@@ -1424,7 +1588,7 @@ const matrixGame = {
     else if (dir === 'down'){ if (r + this.S > 9){ this.oob(); return; } np = this.P + 10 * this.S; label = this.P + ' ＋ ' + (10*this.S) + ' ＝ ' + np; }
     this.P = np; this.steps++;
     this.score -= Math.max(1, 5 - this.S);
-    Sfx.tick();
+    Sfx.tick(); gainCoins(2);
     this.updateGrid();
     $('formula').textContent = label;
     this.updateInfo();
@@ -1432,7 +1596,8 @@ const matrixGame = {
   },
   oob(){
     this.score = Math.max(0, this.score - 1);
-    toast('出界！扣 1 分');
+    gainCoins(-1);
+    toast('出界！扣 1 分（金币 −1）');
     this.updateInfo();
   },
   hint(){
@@ -1453,12 +1618,11 @@ const matrixGame = {
   },
   win(){
     Sfx.win();
-    const stars = this.score >= 90 ? 3 : (this.score >= 80 ? 2 : 1);
-    const coins = 10 + (stars - 1) * 5;
-    SAVE.coins += coins; SAVE.stars += stars;
+    const stars = this.level;
+    SAVE.stars += stars;
     if ((SAVE.best[5][this.level-1] || 0) < stars) SAVE.best[5][this.level-1] = stars;
-    persist(); refreshHud();
-    showRating('方阵寻宝', stars, coins, this.afterEnd, '剩余 ' + this.score + ' 分');
+    persist();
+    showRating('方阵寻宝', stars, 0, this.afterEnd, '剩余 ' + this.score + ' 分');
   },
   buildUI(){
     clearUI();
@@ -1509,6 +1673,16 @@ function uiMsg(html){
   $('gameUI').appendChild(d);
   return d;
 }
+/* 算式方框行：[框A] 符号 [框B] = [框C]，跳动的数字格 */
+function renderCalc(a, op, b, c, jumpKey){
+  const j = k => k === jumpKey ? ' jump' : '';
+  $('formula').innerHTML =
+    '<span class="calcBox' + j('a') + '">' + a + '</span>' +
+    '<span class="calcOp">' + op + '</span>' +
+    '<span class="calcBox' + j('b') + '">' + b + '</span>' +
+    '<span class="calcEq">=</span>' +
+    '<span class="calcBox' + j('c') + '">' + c + '</span>';
+}
 
 /* 难度选择 + 开始 */
 function showIntro(gameIdx, defLevel){
@@ -1539,6 +1713,7 @@ $('introGo').addEventListener('click', () => {
 
 function enterGame(idx, level){
   audio();
+  SAVE.score = (SAVE.score || 0) + 1; persist(); refreshHud();  // 局数：每玩一次 +1
   fadeIn(() => {
     showOnly('world');
     groups['world'].visible = false;
@@ -1565,27 +1740,13 @@ function backToWorld(){
 }
 
 /* 结算 */
+/* 结算（无弹窗）：场景内星级提示 + 再来一局按钮，星星奖励飘动到 HUD 瓶罐（金币已在操作中即时发放） */
 function showRating(name, stars, coins, afterEnd, extra){
-  $('ratingTitle').textContent = name + ' · 完成！';
-  const st = $('ratingStars');
-  st.innerHTML = '';
-  for (let i = 0; i < 3; i++){
-    const s = document.createElement('span');
-    s.textContent = '★';
-    s.className = i < stars ? '' : 'off';
-    st.appendChild(s);
-  }
-  $('ratingGot').textContent = (extra ? extra + ' · ' : '') + '金币 +' + coins;
-  $('ratingScreen').classList.remove('hidden');
-  $('againBtn').onclick = () => {
-    $('ratingScreen').classList.add('hidden');
-    enterGame(currentGame >= 0 ? currentGame : 0, currentLevel);
-  };
-  $('backWorldBtn').onclick = () => {
-    $('ratingScreen').classList.add('hidden');
-    afterEnd && afterEnd();
-  };
+  clearUI();
+  uiMsg('完成！' + name + ' ' + '★'.repeat(Math.max(0, stars)) + (extra ? ' · ' + extra : ''));
+  uiBtn('再来一局', () => enterGame(currentGame >= 0 ? currentGame : 0, currentLevel), 'gold');
   audio(); Sfx.win();
+  rewardFly(coins, stars, () => refreshHud());
 }
 
 /* 淡入淡出 */
@@ -1603,7 +1764,7 @@ $('startBtn').addEventListener('click', () => {
 $('backBtn').addEventListener('click', backToWorld);
 
 /* 调试/测试句柄（对玩法无影响） */
-window.__game = { groups, worldG, girl, camera, renderer, appleGame, crossGame, stairGame, shootGame, clockGame, matrixGame, showIntro, enterGame, backToWorld, maxBest };
+window.__game = { groups, worldG, girl, camera, renderer, appleGame, crossGame, stairGame, shootGame, clockGame, matrixGame, showIntro, enterGame, backToWorld, maxBest, SAVE, refreshHud };
 window.__state = { get active(){ return activeName; }, get currentGame(){ return currentGame; }, get level(){ return currentLevel; } };
 
 const clock = new THREE.Clock();
