@@ -1,1954 +1,1581 @@
----
-title: "数字星夜 · 一年级数学 20 以内加减法 · Three.js 3D 游戏"
-date: 2026-10-16
-lead: "数字星夜"
-disable_comments: false
-authorbox: true
-toc: false
-mathjax: true
-mermaid: true
-categories:
-- "数学"
-tags:
-- "数学"
-menu:
-main:
-weight: 8
----
 <!doctype html>
 <html lang="zh-CN">
-
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>数字星夜 · 一年级数学 20 以内加减法 · Three.js 3D 游戏</title>
-  <style>
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #0a0e1f;
-      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-      user-select: none;
-      -webkit-user-select: none
-    }
-
-    #sceneWrap {
-      position: fixed;
-      inset: 0;
-      z-index: 0
-    }
-
-    #sceneWrap canvas {
-      display: block
-    }
-
-    #hud {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 20;
-      pointer-events: none;
-      padding: 10px 14px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px
-    }
-
-    #hudTopL {
-      display: flex;
-      gap: 10px;
-      align-items: center
-    }
-
-    .pill {
-      background: rgba(10, 14, 31, .72);
-      border: 1px solid rgba(255, 255, 255, .22);
-      color: #ffe9b8;
-      border-radius: 999px;
-      padding: 6px 14px;
-      font-size: 16px;
-      font-weight: 700;
-      backdrop-filter: blur(4px)
-    }
-
-    .pill b {
-      color: #ffd75e
-    }
-
-    #backBtn {
-      pointer-events: auto;
-      background: #2f3b68;
-      color: #fff;
-      border: 1px solid #5b6fc0;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer
-    }
-
-    #backBtn:hover {
-      background: #3d4e9e
-    }
-
-    #statusLine {
-      position: fixed;
-      top: 64px;
-      left: 0;
-      right: 0;
-      z-index: 20;
-      text-align: center;
-      pointer-events: none;
-      font-size: 22px;
-      font-weight: 800;
-      color: #fff;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, .6)
-    }
-
-    #statusLine .cmp {
-      font-size: 30px;
-      padding: 0 6px
-    }
-
-    #formula {
-      position: fixed;
-      bottom: 150px;
-      left: 0;
-      right: 0;
-      z-index: 20;
-      text-align: center;
-      pointer-events: none;
-      font-size: 26px;
-      font-weight: 800;
-      color: #9ee6ff;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, .7)
-    }
-
-    #toast {
-      position: fixed;
-      top: 38%;
-      left: 0;
-      right: 0;
-      z-index: 30;
-      text-align: center;
-      pointer-events: none;
-      font-size: 34px;
-      font-weight: 900;
-      color: #ffd75e;
-      text-shadow: 0 3px 12px rgba(0, 0, 0, .8);
-      opacity: 0;
-      transition: opacity .35s
-    }
-
-    #toast.show {
-      opacity: 1
-    }
-
-    #gameUI {
-      position: fixed;
-      bottom: 14px;
-      left: 0;
-      right: 0;
-      z-index: 20;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      padding: 8px 12px;
-      pointer-events: none
-    }
-
-    #gameUI>* {
-      pointer-events: auto
-    }
-
-    .gbtn {
-      background: linear-gradient(#5b6fc0, #3d4e9e);
-      color: #fff;
-      border: 2px solid #8fa2e8;
-      border-radius: 14px;
-      padding: 14px 20px;
-      font-size: 20px;
-      font-weight: 800;
-      cursor: pointer;
-      min-width: 70px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, .4)
-    }
-
-    .gbtn:hover {
-      filter: brightness(1.15)
-    }
-
-    .gbtn:active {
-      transform: translateY(2px)
-    }
-
-    .gbtn.gold {
-      background: linear-gradient(#e8a33d, #c47e14);
-      border-color: #ffd98a;
-      color: #3a2500
-    }
-
-    .gbtn.red {
-      background: linear-gradient(#d96a5a, #b3452f);
-      border-color: #f0a08f
-    }
-
-    .gbtn.green {
-      background: linear-gradient(#4fae6d, #2f8a4c);
-      border-color: #8fd8a8
-    }
-
-    .gbtn.small {
-      font-size: 16px;
-      padding: 10px 14px;
-      min-width: 54px
-    }
-
-    .gbtn.tiny {
-      font-size: 14px;
-      padding: 8px 10px;
-      min-width: 44px;
-      border-radius: 10px
-    }
-
-    .gbtn:disabled {
-      opacity: .4;
-      pointer-events: none
-    }
-
-    .gmsg {
-      background: rgba(10, 14, 31, .78);
-      border: 1px solid rgba(255, 255, 255, .25);
-      color: #fff;
-      border-radius: 14px;
-      padding: 10px 18px;
-      font-size: 18px;
-      font-weight: 700;
-      backdrop-filter: blur(4px)
-    }
-
-    .gmsg b {
-      color: #ffd75e
-    }
-
-    .grow {
-      flex-basis: 100%;
-      height: 0
-    }
-
-    #fade {
-      position: fixed;
-      inset: 0;
-      background: #0a0e1f;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 40;
-      transition: opacity .5s
-    }
-
-    #fade.on {
-      opacity: 1;
-      pointer-events: auto
-    }
-
-    .overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(5, 8, 20, .78);
-      backdrop-filter: blur(6px)
-    }
-
-    .overlay.hidden {
-      display: none
-    }
-
-    .card {
-      background: linear-gradient(#232c55, #151d3d);
-      border: 2px solid #5b6fc0;
-      border-radius: 24px;
-      padding: 34px 44px;
-      max-width: 680px;
-      text-align: center;
-      box-shadow: 0 18px 60px rgba(0, 0, 0, .6)
-    }
-
-    .card h1 {
-      color: #ffd75e;
-      font-size: 40px;
-      margin: 0 0 6px;
-      letter-spacing: 2px
-    }
-
-    .card h2 {
-      color: #fff;
-      font-size: 22px;
-      margin: 0 0 16px;
-      font-weight: 600
-    }
-
-    .card p {
-      color: #c7d2f5;
-      font-size: 16px;
-      line-height: 1.8;
-      margin: 4px 0
-    }
-
-    .card .sub {
-      color: #8fa2e8;
-      font-size: 14px;
-      line-height: 1.7;
-      margin: 8px 0
-    }
-
-    .row {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin: 18px 0 8px;
-      flex-wrap: wrap
-    }
-
-    .lvlBtn {
-      background: #2f3b68;
-      color: #fff;
-      border: 2px solid #5b6fc0;
-      border-radius: 14px;
-      padding: 12px 22px;
-      font-size: 20px;
-      font-weight: 800;
-      cursor: pointer
-    }
-
-    .lvlBtn.on {
-      background: #e8a33d;
-      border-color: #ffd98a;
-      color: #3a2500
-    }
-
-    .bigBtn {
-      background: linear-gradient(#e8a33d, #c47e14);
-      color: #3a2500;
-      border: none;
-      border-radius: 16px;
-      padding: 16px 40px;
-      font-size: 24px;
-      font-weight: 900;
-      cursor: pointer;
-      margin-top: 8px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, .4)
-    }
-
-    .bigBtn:hover {
-      filter: brightness(1.1)
-    }
-
-    .stars {
-      font-size: 44px;
-      letter-spacing: 8px;
-      margin: 6px 0
-    }
-
-    .stars .off {
-      color: #3a4468
-    }
-
-    #ratingCard .got {
-      color: #9ee6ff;
-      font-size: 20px;
-      font-weight: 700
-    }
-
-    #hintLine {
-      font-size: 14px;
-      color: #8fa2e8;
-      margin-top: 10px
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数字星夜 · 一年级数学 20 以内加减法 · Three.js 2D 几何游戏</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0e1f;font-family:"PingFang SC","Microsoft YaHei",sans-serif;user-select:none;-webkit-user-select:none}
+  #sceneWrap{position:fixed;inset:0;z-index:0}
+  #sceneWrap canvas{display:block}
+  #hud{position:fixed;top:0;left:0;right:0;z-index:20;pointer-events:none;padding:10px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  #hudTopL{display:flex;gap:10px;align-items:center}
+  .pill{background:rgba(10,14,31,.72);border:1px solid rgba(255,255,255,.22);color:#ffe9b8;border-radius:999px;padding:6px 14px;font-size:16px;font-weight:700;backdrop-filter:blur(4px)}
+  .pill b{color:#ffd75e}
+  #backBtn{pointer-events:auto;background:#2f3b68;color:#fff;border:1px solid #5b6fc0;border-radius:10px;padding:8px 14px;font-size:15px;font-weight:700;cursor:pointer}
+  #backBtn:hover{background:#3d4e9e}
+  #statusLine{position:fixed;top:64px;left:0;right:0;z-index:20;text-align:center;pointer-events:none;font-size:22px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+  #formula{position:fixed;bottom:150px;left:0;right:0;z-index:20;text-align:center;pointer-events:none;font-size:26px;font-weight:800;color:#9ee6ff;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+  #toast{position:fixed;top:38%;left:0;right:0;z-index:30;text-align:center;pointer-events:none;font-size:34px;font-weight:900;color:#ffd75e;text-shadow:0 3px 12px rgba(0,0,0,.8);opacity:0;transition:opacity .35s}
+  #toast.show{opacity:1}
+  #gameUI{position:fixed;bottom:14px;left:0;right:0;z-index:20;display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:8px 12px;pointer-events:none}
+  #gameUI>*{pointer-events:auto}
+  .gbtn{background:linear-gradient(#5b6fc0,#3d4e9e);color:#fff;border:2px solid #8fa2e8;border-radius:14px;padding:14px 20px;font-size:20px;font-weight:800;cursor:pointer;min-width:70px;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+  .gbtn:hover{filter:brightness(1.15)}
+  .gbtn:active{transform:translateY(2px)}
+  .gbtn.gold{background:linear-gradient(#e8a33d,#c47e14);border-color:#ffd98a;color:#3a2500}
+  .gbtn.red{background:linear-gradient(#d96a5a,#b3452f);border-color:#f0a08f}
+  .gbtn.green{background:linear-gradient(#4fae6d,#2f8a4c);border-color:#8fd8a8}
+  .gbtn.small{font-size:16px;padding:10px 14px;min-width:54px}
+  .gbtn.tiny{font-size:14px;padding:8px 10px;min-width:44px;border-radius:10px}
+  .gbtn:disabled{opacity:.4;pointer-events:none}
+  .gmsg{background:rgba(10,14,31,.78);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:14px;padding:10px 18px;font-size:18px;font-weight:700;backdrop-filter:blur(4px)}
+  .gmsg b{color:#ffd75e}
+  .grow{flex-basis:100%;height:0}
+  #fade{position:fixed;inset:0;background:#0a0e1f;opacity:0;pointer-events:none;z-index:40;transition:opacity .5s}
+  #fade.on{opacity:1;pointer-events:auto}
+  .overlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(5,8,20,.78);backdrop-filter:blur(6px)}
+  .overlay.hidden{display:none}
+  .card{background:linear-gradient(#232c55,#151d3d);border:2px solid #5b6fc0;border-radius:24px;padding:34px 44px;max-width:680px;text-align:center;box-shadow:0 18px 60px rgba(0,0,0,.6)}
+  .card h1{color:#ffd75e;font-size:40px;margin:0 0 6px;letter-spacing:2px}
+  .card h2{color:#fff;font-size:22px;margin:0 0 16px;font-weight:600}
+  .card p{color:#c7d2f5;font-size:16px;line-height:1.8;margin:4px 0}
+  .card .sub{color:#8fa2e8;font-size:14px;line-height:1.7;margin:8px 0}
+  .row{display:flex;justify-content:center;gap:12px;margin:18px 0 8px;flex-wrap:wrap}
+  .lvlBtn{background:#2f3b68;color:#fff;border:2px solid #5b6fc0;border-radius:14px;padding:12px 22px;font-size:20px;font-weight:800;cursor:pointer}
+  .lvlBtn.on{background:#e8a33d;border-color:#ffd98a;color:#3a2500}
+  .bigBtn{background:linear-gradient(#e8a33d,#c47e14);color:#3a2500;border:none;border-radius:16px;padding:16px 40px;font-size:24px;font-weight:900;cursor:pointer;margin-top:8px;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+  .bigBtn:hover{filter:brightness(1.1)}
+  .stars{font-size:44px;letter-spacing:8px;margin:6px 0}
+  .stars .off{color:#3a4468}
+  #ratingCard .got{color:#9ee6ff;font-size:20px;font-weight:700}
+  #hintLine{font-size:14px;color:#8fa2e8;margin-top:10px}
+</style>
 </head>
-
 <body>
-  <div id="sceneWrap"></div>
+<div id="sceneWrap"></div>
 
-  <div id="hud">
-    <div id="hudTopL">
-      <div class="pill">金币 <b id="coinVal">0</b></div>
-      <div class="pill">星星 <b id="starVal">0</b></div>
-    </div>
-    <button id="backBtn" style="display:none">返回夜空</button>
+<div id="hud">
+  <div id="hudTopL">
+    <div class="pill">金币 <b id="coinVal">0</b></div>
+    <div class="pill">星星 <b id="starVal">0</b></div>
   </div>
-  <div id="statusLine"></div>
-  <div id="formula"></div>
-  <div id="gameUI"></div>
-  <div id="toast"></div>
-  <div id="fade"></div>
+  <button id="backBtn" style="display:none">返回夜空</button>
+</div>
+<div id="statusLine"></div>
+<div id="formula"></div>
+<div id="gameUI"></div>
+<div id="toast"></div>
+<div id="fade"></div>
 
-  <div id="startScreen" class="overlay">
-    <div class="card">
-      <h1>数字星夜</h1>
-      <h2>卖火柴的小女孩 · 数学大冒险</h2>
-      <p>夜空里有六根发光的柱子，每一根通向一个 3D 游戏：摘苹果、扶老奶奶过马路、爬楼梯、打靶、时钟救援、方阵寻宝。</p>
-      <p class="sub">数字是用来记录实物多少的：苹果个数、走过的步数、楼层高度、靶环数、时钟刻度、矩阵坐标。<br>每局按成绩获得 1–3 星和金币，全部计算过程都会当场显示。</p>
-      <button id="startBtn" class="bigBtn">开始冒险</button>
-      <div id="hintLine">建议使用 Chrome / Edge 打开 · 首次点击画面后音效开启 · 需要联网加载 three.js</div>
-    </div>
+<div id="startScreen" class="overlay">
+  <div class="card">
+    <h1>数字星夜</h1>
+    <h2>卖火柴的小女孩 · 数学大冒险（2D 几何版）</h2>
+    <p>夜空里有六个发光的几何入口，每一个通向一个 2D 游戏：摘苹果、扶老奶奶过马路、爬楼梯、打靶、时钟救援、方阵寻宝。所有场景和实物都用圆形、三角形、矩形和线条拼成。</p>
+    <p class="sub">数字是用来记录实物多少的：苹果个数、走过的步数、楼层高度、靶环数、时钟刻度、矩阵坐标。<br>每局按成绩获得 1–3 星和金币，全部计算过程都会当场显示。</p>
+    <button id="startBtn" class="bigBtn">开始冒险</button>
+    <div id="hintLine">建议使用 Chrome / Edge 打开 · 首次点击画面后音效开启 · 需要联网加载 three.js</div>
   </div>
+</div>
 
-  <div id="introScreen" class="overlay hidden">
-    <div class="card">
-      <h2 id="introTitle">游戏</h2>
-      <p id="introDesc"></p>
-      <div class="row" id="lvlRow"></div>
-      <button id="introGo" class="bigBtn">开始游戏</button>
-    </div>
+<div id="introScreen" class="overlay hidden">
+  <div class="card">
+    <h2 id="introTitle">游戏</h2>
+    <p id="introDesc"></p>
+    <div class="row" id="lvlRow"></div>
+    <button id="introGo" class="bigBtn">开始游戏</button>
   </div>
+</div>
 
-  <div id="ratingScreen" class="overlay hidden">
-    <div class="card" id="ratingCard">
-      <h2 id="ratingTitle">完成！</h2>
-      <div class="stars" id="ratingStars"></div>
-      <div class="got" id="ratingGot"></div>
-      <div class="row">
-        <button id="againBtn" class="bigBtn">再玩一次</button>
-        <button id="backWorldBtn" class="bigBtn"
-          style="background:linear-gradient(#5b6fc0,#3d4e9e);color:#fff">返回夜空</button>
-      </div>
+<div id="ratingScreen" class="overlay hidden">
+  <div class="card" id="ratingCard">
+    <h2 id="ratingTitle">完成！</h2>
+    <div class="stars" id="ratingStars"></div>
+    <div class="got" id="ratingGot"></div>
+    <div class="row">
+      <button id="againBtn" class="bigBtn">再玩一次</button>
+      <button id="backWorldBtn" class="bigBtn" style="background:linear-gradient(#5b6fc0,#3d4e9e);color:#fff">返回夜空</button>
     </div>
   </div>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/DragControls.js"></script>
-  <script>
-    'use strict';
-    /* =========================================================
-       数字星夜 · 一年级数学 20 以内加减法 · Three.js 3D 互动游戏
-       单文件可运行版：夜空世界 + 六场景游戏 + 星级金币
-       实现依据：《数字星夜》完整实现提示词（飞书文档）
-       ========================================================= */
-    try {
-      /* ---------------- 工具 ---------------- */
-      const $ = id => document.getElementById(id);
-      function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-      function rand(a, b) { return a + Math.random() * (b - a); }
-      function randi(a, b) { return Math.floor(rand(a, b + 1)); }
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/DragControls.js"></script>
+<script>
+'use strict';
+/* =========================================================
+   数字星夜 · 一年级数学 20 以内加减法 · Three.js 2D 几何互动游戏
+   单文件可运行版：2D 几何夜空世界 + 六场景游戏 + 星级金币
+   场景与实物全部用圆形/三角形/矩形/线条等几何图形拼成
+   ========================================================= */
+try {
+/* ---------------- 工具 ---------------- */
+const $ = id => document.getElementById(id);
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+function rand(a, b){ return a + Math.random() * (b - a); }
+function randi(a, b){ return Math.floor(rand(a, b + 1)); }
 
-      /* 音效（WebAudio 程序化） */
-      let AC = null;
-      function audio() {
-        if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } }
-        if (AC && AC.state === 'suspended') AC.resume();
-        return AC;
-      }
-      function tone(f, dur, type, vol, delay) {
-        const ac = audio(); if (!ac) return;
-        const t = ac.currentTime + (delay || 0);
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.type = type || 'sine'; o.frequency.value = f;
-        g.gain.setValueAtTime(vol || 0.14, t);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.15));
-        o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + (dur || 0.15) + 0.03);
-      }
-      const Sfx = {
-        pick: () => tone(620, .08, 'triangle', .14),
-        drop: () => tone(280, .10, 'sine', .15),
-        coin: () => { tone(880, .10, 'square', .10); tone(1320, .16, 'square', .10, .09); },
-        win: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, .16, 'triangle', .18, i * .11)),
-        fail: () => [320, 240, 190].forEach((f, i) => tone(f, .20, 'sawtooth', .09, i * .14)),
-        click: () => tone(650, .05, 'square', .07),
-        tick: () => tone(760, .04, 'square', .06),
-        laugh: () => { tone(500, .09, 'triangle', .14); tone(680, .11, 'triangle', .14, .10); },
-        cry: () => { tone(340, .28, 'sine', .12); tone(290, .30, 'sine', .12, .24); },
-        whoosh: () => tone(220, .30, 'sawtooth', .06),
-        meow: () => { tone(820, .08, 'triangle', .12); tone(980, .10, 'triangle', .12, .08); },
-        boom: () => { tone(120, .35, 'square', .12); tone(80, .4, 'sine', .14, .02); },
-      };
+/* 音效（WebAudio 程序化） */
+let AC = null;
+function audio(){
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(f, dur, type, vol, delay){
+  const ac = audio(); if (!ac) return;
+  const t = ac.currentTime + (delay || 0);
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(vol || 0.14, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.15));
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + (dur || 0.15) + 0.03);
+}
+const Sfx = {
+  pick:  () => tone(620, .08, 'triangle', .14),
+  drop:  () => tone(280, .10, 'sine', .15),
+  coin:  () => { tone(880, .10, 'square', .10); tone(1320, .16, 'square', .10, .09); },
+  win:   () => [523,659,784,1047].forEach((f,i)=>tone(f, .16, 'triangle', .18, i*.11)),
+  fail:  () => [320,240,190].forEach((f,i)=>tone(f, .20, 'sawtooth', .09, i*.14)),
+  click: () => tone(650, .05, 'square', .07),
+  tick:  () => tone(760, .04, 'square', .06),
+  laugh: () => { tone(500,.09,'triangle',.14); tone(680,.11,'triangle',.14,.10); },
+  cry:   () => { tone(340,.28,'sine',.12); tone(290,.30,'sine',.12,.24); },
+  whoosh:() => tone(220, .30, 'sawtooth', .06),
+  meow:  () => { tone(820,.08,'triangle',.12); tone(980,.10,'triangle',.12,.08); },
+  boom:  () => { tone(120,.35,'square',.12); tone(80,.4,'sine',.14,.02); },
+};
 
-      /* 文字贴图 Sprite */
-      function roundRectPath(ctx, x, y, w, h, r) {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
-      }
-      function textSprite(text, o) {
-        o = Object.assign({ size: 64, color: '#ffffff', bg: null, border: null, pad: 14, weight: '800', unit: 1.2 }, o || {});
-        const c = document.createElement('canvas'), ctx = c.getContext('2d');
-        const font = o.weight + ' ' + (o.size | 0) + 'px "PingFang SC","Microsoft YaHei",sans-serif';
-        ctx.font = font;
-        const tw = Math.ceil(ctx.measureText(text).width);
-        const W = Math.ceil(tw + o.pad * 2), H = Math.ceil(o.size * 1.5 + o.pad * 2);
-        c.width = W; c.height = H; ctx.font = font;
-        if (o.bg) { ctx.fillStyle = o.bg; roundRectPath(ctx, 1, 1, W - 2, H - 2, 14); ctx.fill(); }
-        if (o.border) { ctx.strokeStyle = o.border; ctx.lineWidth = 3; roundRectPath(ctx, 2, 2, W - 4, H - 4, 13); ctx.stroke(); }
-        ctx.fillStyle = o.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(text, W / 2, H / 2 + 1);
-        const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
-        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
-        const u = o.unit; sp.scale.set(W / H * u, u, 1);
-        return sp;
-      }
+/* 文字贴图 Sprite */
+function roundRectPath(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function textSprite(text, o){
+  o = Object.assign({ size: 64, color: '#ffffff', bg: null, border: null, pad: 14, weight: '800', unit: 1.2 }, o || {});
+  const c = document.createElement('canvas'), ctx = c.getContext('2d');
+  const font = o.weight + ' ' + (o.size|0) + 'px "PingFang SC","Microsoft YaHei",sans-serif';
+  ctx.font = font;
+  const tw = Math.ceil(ctx.measureText(text).width);
+  const W = Math.ceil(tw + o.pad*2), H = Math.ceil(o.size*1.5 + o.pad*2);
+  c.width = W; c.height = H; ctx.font = font;
+  if (o.bg){ ctx.fillStyle = o.bg; roundRectPath(ctx, 1, 1, W-2, H-2, 14); ctx.fill(); }
+  if (o.border){ ctx.strokeStyle = o.border; ctx.lineWidth = 3; roundRectPath(ctx, 2, 2, W-4, H-4, 13); ctx.stroke(); }
+  ctx.fillStyle = o.color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, W/2, H/2 + 1);
+  const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  const u = o.unit; sp.scale.set(W/H*u, u, 1);
+  return sp;
+}
 
-      /* 表情贴图（😊/😢/😴 手绘） */
-      function faceTex(mood) {
-        const c = document.createElement('canvas'); c.width = 128; c.height = 112;
-        const x = c.getContext('2d');
-        x.strokeStyle = '#2b2b3a'; x.fillStyle = '#2b2b3a'; x.lineWidth = 7; x.lineCap = 'round';
-        // 眼睛
-        if (mood === 'sleep') { x.beginPath(); x.arc(42, 46, 9, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(86, 46, 9, 0, Math.PI * 2); x.fill(); }
-        else {
-          x.beginPath(); x.arc(42, 44, 11, 0, Math.PI * 2); x.stroke(); x.beginPath(); x.arc(86, 44, 11, 0, Math.PI * 2); x.stroke();
-          x.fillStyle = '#2b2b3a';
-          x.beginPath(); x.arc(42, 44, 4, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(86, 44, 4, 0, Math.PI * 2); x.fill();
-        }
-        if (mood === 'happy') { x.beginPath(); x.arc(64, 80, 22, 0.15 * Math.PI, 0.85 * Math.PI); x.stroke(); }
-        else if (mood === 'cry') {
-          x.beginPath(); x.arc(64, 86, 20, 1.15 * Math.PI, 1.85 * Math.PI); x.stroke();
-          x.fillStyle = '#6fb9ff'; x.beginPath(); x.arc(98, 62, 5, 0, Math.PI * 2); x.fill(); x.beginPath(); x.arc(101, 70, 4, 0, Math.PI * 2); x.fill();
-        }
-        else if (mood === 'sleep') { x.beginPath(); x.arc(64, 84, 18, 0.1 * Math.PI, 0.9 * Math.PI); x.stroke(); }
-        else { x.beginPath(); x.moveTo(50, 78); x.lineTo(78, 78); x.stroke(); } // neutral
-        const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
-        return tex;
-      }
+/* 表情贴图（😊/😢/😴 手绘） */
+function faceTex(mood){
+  const c = document.createElement('canvas'); c.width = 128; c.height = 112;
+  const x = c.getContext('2d');
+  x.strokeStyle = '#2b2b3a'; x.fillStyle = '#2b2b3a'; x.lineWidth = 7; x.lineCap = 'round';
+  if (mood === 'sleep'){ x.beginPath(); x.arc(42,46,9,0,Math.PI*2); x.fill(); x.beginPath(); x.arc(86,46,9,0,Math.PI*2); x.fill(); }
+  else {
+    x.beginPath(); x.arc(42,44,11,0,Math.PI*2); x.stroke(); x.beginPath(); x.arc(86,44,11,0,Math.PI*2); x.stroke();
+    x.fillStyle = '#2b2b3a';
+    x.beginPath(); x.arc(42,44,4,0,Math.PI*2); x.fill(); x.beginPath(); x.arc(86,44,4,0,Math.PI*2); x.fill();
+  }
+  if (mood === 'happy'){ x.beginPath(); x.arc(64,80,22,0.15*Math.PI,0.85*Math.PI); x.stroke(); }
+  else if (mood === 'cry'){ x.beginPath(); x.arc(64,86,20,1.15*Math.PI,1.85*Math.PI); x.stroke();
+    x.fillStyle = '#6fb9ff'; x.beginPath(); x.arc(98,62,5,0,Math.PI*2); x.fill(); x.beginPath(); x.arc(101,70,4,0,Math.PI*2); x.fill(); }
+  else if (mood === 'sleep'){ x.beginPath(); x.arc(64,84,18,0.1*Math.PI,0.9*Math.PI); x.stroke(); }
+  else { x.beginPath(); x.moveTo(50,78); x.lineTo(78,78); x.stroke(); }
+  const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+  return tex;
+}
 
-      /* 递归设置阴影 */
-      function shadowRec(g, cast, recv) {
-        g.traverse(o => { if (o.isMesh) { if (cast) o.castShadow = true; if (recv) o.receiveShadow = true; } });
-      }
+/* 简单补间动画 */
+function tween(obj, props, dur, ease, onDone){
+  const from = {}, to = {};
+  for (const k in props){ from[k] = obj[k]; to[k] = props[k]; }
+  const t0 = performance.now();
+  function step(now){
+    let t = clamp((now - t0) / (dur * 1000), 0, 1);
+    t = ease ? ease(t) : t;
+    for (const k in to) obj[k] = from[k] + (to[k] - from[k]) * t;
+    if (t < 1) requestAnimationFrame(step); else if (onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const easeInOut = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
 
-      /* 简单补间动画 */
-      function tween(obj, props, dur, ease, onDone) {
-        const from = {}, to = {};
-        for (const k in props) { from[k] = obj[k]; to[k] = props[k]; }
-        const t0 = performance.now();
-        function step(now) {
-          let t = clamp((now - t0) / (dur * 1000), 0, 1);
-          t = ease ? ease(t) : t;
-          for (const k in to) obj[k] = from[k] + (to[k] - from[k]) * t;
-          if (t < 1) requestAnimationFrame(step); else if (onDone) onDone();
-        }
-        requestAnimationFrame(step);
-      }
-      const easeOut = t => 1 - Math.pow(1 - t, 3);
-      const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-
-      function minPresses(target, coins) {
-        if (target <= 0) return 0;
-        const d = { 0: 0 }; const q = [0];
-        while (q.length) {
-          const v = q.shift();
-          if (v === target) return d[v];
-          for (const c of coins) {
-            const nv = v + c;
-            if (nv < 0 || nv > target || d[nv] !== undefined) continue;
-            d[nv] = d[v] + 1; q.push(nv);
-          }
-        }
-        return Infinity;
-      }
-
-      /* 存档 */
-      let SAVE = { coins: 0, stars: 0, best: [[], [], [], [], [], []] };
-      try {
-        const raw = localStorage.getItem('numstarry_save');
-        if (raw) { const p = JSON.parse(raw); if (p && typeof p.coins === 'number') SAVE = p; }
-      } catch (e) { }
-      function persist() { try { localStorage.setItem('numstarry_save', JSON.stringify(SAVE)); } catch (e) { } }
-      function refreshHud() {
-        $('coinVal').textContent = SAVE.coins;
-        $('starVal').textContent = SAVE.stars;
-      }
-
-      /* ---------------- 渲染引擎 ---------------- */
-      const wrap = $('sceneWrap');
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.outputEncoding = THREE.sRGBEncoding;
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      wrap.appendChild(renderer.domElement);
-
-      const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0a0e1f);
-      scene.fog = new THREE.Fog(0x0a0e1f, 70, 230);
-
-      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
-      camera.position.set(0, 14, 17); camera.lookAt(0, 1, 0);
-
-      window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
-
-      /* 全局光 */
-      const ambient = new THREE.AmbientLight(0x8899cc, 0.5);
-      scene.add(ambient);
-
-      /* ---------------- 组管理 ---------------- */
-      const groups = {};      // 名称 -> THREE.Group
-      const groupLights = {}; // 名称 -> 灯光数组
-      function makeGroup(name) { const g = new THREE.Group(); scene.add(g); groups[name] = g; groupLights[name] = []; g.visible = false; return g; }
-      function addLightTo(name, light) { groups[name].add(light); groupLights[name].push(light); }
-      function showOnly(name) {
-        for (const k in groups) groups[k].visible = (k === name);
-        for (const k in groupLights) for (const l of groupLights[k]) l.visible = (k === name);
-      }
-
-      /* =========================================================
-         一、夜空世界：卖火柴的小女孩 + 六游戏入口
-         ========================================================= */
-      const worldG = makeGroup('world');
-
-      /* 地面与道路 */
-      (function () {
-        const ground = new THREE.Mesh(
-          new THREE.PlaneGeometry(300, 300),
-          new THREE.MeshStandardMaterial({ color: 0x141b33, roughness: 1 })
-        );
-        ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; worldG.add(ground);
-        // 两条交汇的道路
-        const roadMat = new THREE.MeshStandardMaterial({ color: 0x39415c, roughness: .95 });
-        const road1 = new THREE.Mesh(new THREE.PlaneGeometry(90, 3.2), roadMat); road1.rotation.x = -Math.PI / 2; worldG.add(road1);
-        const road2 = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 90), roadMat); road2.rotation.x = -Math.PI / 2; worldG.add(road2);
-        const laneMat = new THREE.MeshStandardMaterial({ color: 0xdfe6ff, roughness: .6 });
-        for (let i = -8; i <= 8; i++) {
-          const m1 = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.9), laneMat); m1.rotation.x = -Math.PI / 2; m1.position.set(i * 1.1, 0.01, -0.8); worldG.add(m1);
-          const m2 = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.16), laneMat); m2.rotation.x = -Math.PI / 2; m2.position.set(-0.8, 0.01, i * 1.1); worldG.add(m2);
-        }
-      })();
-
-      /* 星星 */
-      const starPts = (function () {
-        const n = 650, pos = new Float32Array(n * 3);
-        for (let i = 0; i < n; i++) {
-          const r = rand(110, 230), th = rand(0, Math.PI * 2), ph = rand(0.15, 1.3);
-          pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
-          pos[i * 3 + 1] = r * Math.cos(ph) + 6;
-          pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th) - 40;
-        }
-        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-        const m = new THREE.PointsMaterial({ color: 0xdfe8ff, size: 0.9, transparent: true, opacity: .9, sizeAttenuation: true });
-        const p = new THREE.Points(g, m); worldG.add(p); return p;
-      })();
-
-      /* 月亮（闭眼安睡） */
-      (function () {
-        const moon = new THREE.Mesh(
-          new THREE.SphereGeometry(6, 32, 32),
-          new THREE.MeshBasicMaterial({ map: faceTex('sleep'), color: 0xfff3c9 })
-        );
-        moon.position.set(-34, 52, -110); worldG.add(moon);
-        const glow = new THREE.Mesh(
-          new THREE.SphereGeometry(7.4, 24, 24),
-          new THREE.MeshBasicMaterial({ color: 0xfff3c9, transparent: true, opacity: .12 })
-        );
-        glow.position.copy(moon.position); worldG.add(glow);
-        addLightTo('world', new THREE.PointLight(0xfff3c9, 0.5, 80, 2));
-      })();
-
-      /* 云 */
-      const clouds = [];
-      (function () {
-        const cMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: .16, roughness: 1 });
-        for (let i = 0; i < 4; i++) {
-          const g = new THREE.Group();
-          for (let j = 0; j < 4; j++) {
-            const s = new THREE.Mesh(new THREE.SphereGeometry(rand(3, 5.5), 12, 10), cMat);
-            s.position.set(rand(-6, 6), rand(-1, 1.5), rand(-2, 2)); g.add(s);
-          }
-          g.position.set(rand(-80, 80), rand(34, 48), rand(-120, -70));
-          worldG.add(g); clouds.push({ g, vx: rand(.15, .4) });
-        }
-      })();
-
-      /* 远处城市 */
-      (function () {
-        for (let i = 0; i < 90; i++) {
-          const h = rand(4, 16);
-          const b = new THREE.Mesh(
-            new THREE.BoxGeometry(rand(2.4, 4.2), h, rand(2.4, 4.2)),
-            new THREE.MeshStandardMaterial({ color: 0x1b2446, roughness: .9 })
-          );
-          b.position.set(rand(-130, 130), h / 2, rand(-210, -140)); worldG.add(b);
-          const wc = new THREE.Mesh(
-            new THREE.BoxGeometry(0.34, 0.5, 0.12),
-            new THREE.MeshBasicMaterial({ color: 0xffd98a })
-          );
-          wc.position.set(b.position.x + rand(-1.4, 1.4), rand(2.5, h - 1.5), b.position.z + 1.6);
-          worldG.add(wc);
-        }
-        addLightTo('world', new THREE.PointLight(0xffb15e, 0.6, 60, 2));
-        const cityGlow = new THREE.Mesh(
-          new THREE.PlaneGeometry(300, 24),
-          new THREE.MeshBasicMaterial({ color: 0xffb15e, transparent: true, opacity: .10 })
-        );
-        cityGlow.position.set(0, 6, -175); worldG.add(cityGlow);
-      })();
-
-      /* 树 */
-      (function () {
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a4030, roughness: 1 });
-        const leafMat = new THREE.MeshStandardMaterial({ color: 0x1f5c3a, roughness: 1 });
-        function tree(x, z, s) {
-          const g = new THREE.Group();
-          const t = new THREE.Mesh(new THREE.CylinderGeometry(.18 * s, .3 * s, 1.1 * s, 8), trunkMat); t.position.y = .55 * s; g.add(t);
-          for (let i = 0; i < 3; i++) {
-            const l = new THREE.Mesh(new THREE.ConeGeometry((1.05 - i * .22) * s, (1.1 - i * .18) * s, 9), leafMat);
-            l.position.y = (1.3 + i * .72) * s; g.add(l);
-          }
-          g.position.set(x, 0, z); worldG.add(g);
-        }
-        [[-9, 5], [-7, -6], [8, 6], [10, -7], [-14, 9], [-12, -9], [13, 10], [15, -8]].forEach(p => tree(p[0], p[1], rand(.8, 1.3)));
-      })();
-
-      /* 卖火柴的小女孩 */
-      const girl = (function () {
-        const g = new THREE.Group();
-        const coat = new THREE.Mesh(new THREE.CapsuleGeometry(.42, .75, 6, 12), new THREE.MeshStandardMaterial({ color: 0xb8452f, roughness: .85 }));
-        coat.position.y = 1.0; g.add(coat);
-        const skirt = new THREE.Mesh(new THREE.CylinderGeometry(.55, .35, .5, 12), new THREE.MeshStandardMaterial({ color: 0x7a2d22, roughness: .9 }));
-        skirt.position.y = .42; g.add(skirt);
-        const head = new THREE.Mesh(new THREE.SphereGeometry(.34, 20, 16), new THREE.MeshStandardMaterial({ color: 0xffd9b3, roughness: .8 }));
-        head.position.y = 1.85; g.add(head);
-        const hair = new THREE.Mesh(new THREE.SphereGeometry(.36, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), new THREE.MeshStandardMaterial({ color: 0x8a5a2b }));
-        hair.position.y = 1.88; g.add(hair);
-        const face = new THREE.Sprite(new THREE.SpriteMaterial({ map: faceTex('neutral'), transparent: true }));
-        face.scale.set(1.05, .92, 1); face.position.set(0, 1.88, .32); g.add(face);
-        // 火柴
-        const stick = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, 1.5, 8), new THREE.MeshStandardMaterial({ color: 0xd8a25a, roughness: .8 }));
-        stick.position.set(.35, .95, .1); stick.rotation.z = .6; g.add(stick);
-        const tip = new THREE.Mesh(new THREE.SphereGeometry(.12, 12, 10), new THREE.MeshBasicMaterial({ color: 0xffb15e }));
-        tip.position.set(.68, 1.42, .14); g.add(tip);
-        const fire = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 10), new THREE.MeshBasicMaterial({ color: 0xff7a3c, transparent: true, opacity: .85 }));
-        fire.position.copy(tip.position); g.add(fire);
-        const light = new THREE.PointLight(0xff9d4d, 1.6, 9, 2); light.position.copy(tip.position); g.add(light);
-        g.position.set(-7, 0, 0);
-        worldG.add(g);
-        return { g, fire, dir: 1, moving: true };
-      })();
-      let girlKey = { up: false, down: false, left: false, right: false };
-
-      /* 六游戏入口（发光的柱子） */
-      const portalNames = ['苹果园', '斑马线', '公寓楼', '靶场', '钟楼', '方阵'];
-      (function () {
-        const mat = new THREE.MeshStandardMaterial({ color: 0x5b6fc0, emissive: 0x3d4e9e, emissiveIntensity: .5, metalness: .4, roughness: .3 });
-        for (let i = 0; i < 6; i++) {
-          const a = -Math.PI / 2 + i * Math.PI * 2 / 6;
-          const x = Math.cos(a) * 4.6, z = -Math.sin(a) * 4.6;
-          const p = new THREE.Group();
-          const pole = new THREE.Mesh(new THREE.CylinderGeometry(.16, .22, 1.5, 12), mat); pole.position.y = .75; p.add(pole);
-          const orb = new THREE.Mesh(new THREE.SphereGeometry(.3, 14, 12), new THREE.MeshBasicMaterial({ color: 0x8fe8ff }));
-          orb.position.y = 1.72; p.add(orb);
-          const lab = textSprite(portalNames[i], { size: 56, color: '#9ee6ff', unit: 1.5, bg: 'rgba(10,14,31,.7)', pad: 10 });
-          lab.position.y = 2.55; p.add(lab);
-          p.position.set(x, 0, z);
-          p.userData.portal = i;
-          worldG.add(p);
-        }
-      })();
-      function maxBest(g) { let m = 0; for (let l = 0; l < 3; l++) m = Math.max(m, (SAVE.best[g][l] || 0)); return m; }
-
-      /* 世界更新 */
-      function updateWorld(dt, t) {
-        // 小女孩自动沿路行走
-        const spd = 2.2 * dt;
-        if (girlKey.left) { girl.g.position.x -= spd; girl.g.rotation.y = -Math.PI / 2; girl.dir = -1; }
-        else if (girlKey.right) { girl.g.position.x += spd; girl.g.rotation.y = Math.PI / 2; girl.dir = 1; }
-        else if (girlKey.up) { girl.g.position.z -= spd; girl.g.rotation.y = Math.PI; }
-        else if (girlKey.down) { girl.g.position.z += spd; girl.g.rotation.y = 0; }
-        else {
-          // 自动来回走
-          const target = Math.sin(t * .22) * 7;
-          girl.g.position.x += (target - girl.g.position.x) * Math.min(1, dt * .6);
-          girl.dir = Math.cos(t * .22) >= 0 ? 1 : -1;
-          girl.g.rotation.y = girl.dir > 0 ? -Math.PI / 2 : Math.PI / 2;
-        }
-        girl.g.position.x = clamp(girl.g.position.x, -14, 14);
-        girl.g.position.z = clamp(girl.g.position.z, -8, 8);
-        girl.g.position.y = 0;
-        girl.g.children[0].position.y = 1.0 + Math.sin(t * 8) * .06; // 走路起伏
-        // 火柴火苗
-        girl.fire.scale.setScalar(1 + Math.sin(t * 13) * .18);
-        // 星星闪烁
-        starPts.material.opacity = .75 + Math.sin(t * 1.7) * .2;
-        // 云漂移
-        for (const cl of clouds) { cl.g.position.x += cl.vx * dt; if (cl.g.position.x > 110) cl.g.position.x = -110; }
-        worldG.rotation.y = 0;
-      }
-
-      /* 点击拾取（世界中的入口） */
-      const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
-      renderer.domElement.addEventListener('pointerdown', e => {
-        if (activeName !== 'world') return;
-        pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-        pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(pointer, camera);
-        const hits = raycaster.intersectObjects(worldG.children, true);
-        for (const h of hits) {
-          let n = h.object;
-          while (n && n.userData.portal === undefined) n = n.parent;
-          if (n && n.userData.portal !== undefined) { audio(); showIntro(n.userData.portal + 1, 1); return; }
-        }
-      });
-
-      /* 键盘 */
-      window.addEventListener('keydown', e => {
-        const k = e.key.toLowerCase();
-        if (k === 'w' || k === 'arrowup') girlKey.up = true;
-        else if (k === 's' || k === 'arrowdown') girlKey.down = true;
-        else if (k === 'a' || k === 'arrowleft') girlKey.left = true;
-        else if (k === 'd' || k === 'arrowright') girlKey.right = true;
-      });
-      window.addEventListener('keyup', e => {
-        const k = e.key.toLowerCase();
-        if (k === 'w' || k === 'arrowup') girlKey.up = false;
-        else if (k === 's' || k === 'arrowdown') girlKey.down = false;
-        else if (k === 'a' || k === 'arrowleft') girlKey.left = false;
-        else if (k === 'd' || k === 'arrowright') girlKey.right = false;
-      });
-
-      /* ---------------- 游戏 1：摘苹果 ---------------- */
-      /* 摘苹果：苹果在树冠外侧的 15 个分布位置（上下两层环，露出树叶外，看得见也够得着） */
-      function applePos(i) {
-        const lower = i < 8;
-        const n = lower ? 8 : 7;
-        const k = lower ? i : i - 8;
-        const a = (k + (lower ? 0 : .5)) * Math.PI * 2 / n;
-        const r = lower ? 1.95 : 1.75;
-        const y = lower ? 3.02 + Math.sin(a) * .18 : 3.55 + Math.sin(a) * .14;
-        return new THREE.Vector3(-4.2 + Math.cos(a) * r, y, Math.sin(a) * 1.05);
-      }
-
-      const appleG = makeGroup('apple');
-      const appleGame = {
-        init() {
-          const g = appleG;
-          // 天空：晨光渐变（低多边形风格）
-          const skyC = document.createElement('canvas'); skyC.width = 64; skyC.height = 512;
-          const sk = skyC.getContext('2d');
-          const grad = sk.createLinearGradient(0, 0, 0, 512);
-          grad.addColorStop(0, '#7fb8e8'); grad.addColorStop(.55, '#bfe3ff'); grad.addColorStop(.82, '#ffe9c4'); grad.addColorStop(1, '#fff3d8');
-          sk.fillStyle = grad; sk.fillRect(0, 0, 64, 512);
-          const skyTex = new THREE.CanvasTexture(skyC); skyTex.encoding = THREE.sRGBEncoding;
-          const sky = new THREE.Mesh(new THREE.SphereGeometry(130, 24, 18), new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, fog: false, depthWrite: false }));
-          g.add(sky);
-          // 晨光方向光（带软阴影）+ 半球光 + 环境光
-          const sun = new THREE.DirectionalLight(0xfff1d6, 1.25);
-          sun.position.set(6, 12, 5);
-          sun.castShadow = true;
-          sun.shadow.mapSize.set(1024, 1024);
-          sun.shadow.camera.left = -13; sun.shadow.camera.right = 13;
-          sun.shadow.camera.top = 13; sun.shadow.camera.bottom = -13;
-          sun.shadow.camera.near = 1; sun.shadow.camera.far = 42;
-          sun.shadow.camera.updateProjectionMatrix();
-          addLightTo('apple', sun);
-          addLightTo('apple', new THREE.HemisphereLight(0xa8d8ff, 0x3a7a4e, .55));
-          addLightTo('apple', new THREE.AmbientLight(0xffffff, .38));
-          // 草地地面（带外圈过渡）
-          const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: 0x2f8a4e, roughness: 1 }));
-          ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; g.add(ground);
-          const groundRing = new THREE.Mesh(new THREE.RingGeometry(15, 17.5, 40), new THREE.MeshStandardMaterial({ color: 0x256b3c, roughness: 1 }));
-          groundRing.rotation.x = -Math.PI / 2; groundRing.position.y = -.02; groundRing.receiveShadow = true; g.add(groundRing);
-          // 远山
-          const hillMat = new THREE.MeshStandardMaterial({ color: 0x3f7a5a, roughness: 1 });
-          for (let i = 0; i < 5; i++) {
-            const a = -Math.PI + i * Math.PI * 2 / 5;
-            const h = new THREE.Mesh(new THREE.ConeGeometry(rand(4.5, 7), rand(4, 6.5), 8), hillMat);
-            h.position.set(Math.cos(a) * 14.5, rand(1.5, 2.6), Math.sin(a) * 14.5);
-            h.rotation.y = rand(0, Math.PI * 2);
-            g.add(h);
-          }
-          // 中央游戏区留白，四周散布草丛 / 小花 / 石头
-          const grassMats = [new THREE.MeshStandardMaterial({ color: 0x3fae62, roughness: 1 }), new THREE.MeshStandardMaterial({ color: 0x2f8a4c, roughness: 1 })];
-          for (let i = 0; i < 26; i++) {
-            const gr = new THREE.Group();
-            for (let j = 0; j < 3; j++) {
-              const b = new THREE.Mesh(new THREE.ConeGeometry(.09, .42, 6), grassMats[i % 2]);
-              b.position.set((j - 1) * .09, .2, (j % 2) * .06); b.rotation.z = (j - 1) * .18;
-              gr.add(b);
-            }
-            let gx, gz, tries = 0;
-            do { gx = rand(-11, 11); gz = rand(-10, 9); tries++; } while (gx > -1 && gx < 8 && gz > -2.2 && gz < 2.2 && tries < 30);
-            gr.position.set(gx, 0, gz);
-            gr.rotation.y = rand(0, Math.PI * 2);
-            gr.scale.setScalar(rand(.7, 1.4));
-            g.add(gr); shadowRec(gr, true, false);
-          }
-          const flowerMats = [0xfff2a8, 0xffc9d8, 0xdfe6ff];
-          for (let i = 0; i < 9; i++) {
-            const f = new THREE.Group();
-            const petal = new THREE.Mesh(new THREE.SphereGeometry(.11, 10, 8), new THREE.MeshStandardMaterial({ color: flowerMats[i % 3], roughness: .7 }));
-            petal.scale.set(1, .55, 1); petal.position.y = .09; f.add(petal);
-            const core = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 8), new THREE.MeshStandardMaterial({ color: 0xffd75e, emissive: 0xffb15e, emissiveIntensity: .3 }));
-            core.position.y = .13; f.add(core);
-            let fx, fz, tries2 = 0;
-            do { fx = rand(-11, 11); fz = rand(-9, 8); tries2++; } while (fx > -1 && fx < 8 && fz > -2.2 && fz < 2.2 && tries2 < 30);
-            f.position.set(fx, 0, fz);
-            f.rotation.y = rand(0, Math.PI * 2);
-            g.add(f); shadowRec(f, true, false);
-          }
-          const rockMat = new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: .9 });
-          for (let i = 0; i < 5; i++) {
-            const rk = new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.18, .4), 0), rockMat);
-            rk.position.set(rand(-11, 11), .12, rand(-9, 9));
-            rk.scale.y = .6; rk.rotation.set(rand(0, 3), rand(0, 3), rand(0, 3));
-            g.add(rk); rk.castShadow = true;
-          }
-          // 远处装饰树（不结果）
-          const decoLeaf = new THREE.MeshStandardMaterial({ color: 0x2f8a4c, roughness: 1 });
-          const decoPts = [[-10.8, -8.2], [-10.2, 8.0], [10.6, -8.0]];
-          for (let i = 0; i < 3; i++) {
-            const dt = new THREE.Group();
-            const dtr = new THREE.Mesh(new THREE.CylinderGeometry(.16, .26, 1.5, 8), new THREE.MeshStandardMaterial({ color: 0x6b4a30, roughness: 1 }));
-            dtr.position.y = .75; dt.add(dtr);
-            for (let j = 0; j < 2; j++) {
-              const cl = new THREE.Mesh(new THREE.ConeGeometry(1.0 - j * .3, 1.15 - j * .25, 8), decoLeaf);
-              cl.position.y = 1.6 + j * .85; dt.add(cl);
-            }
-            dt.position.set(decoPts[i][0], 0, decoPts[i][1]);
-            dt.rotation.y = rand(0, Math.PI * 2);
-            g.add(dt); shadowRec(dt, true, false);
-          }
-          // 主角苹果树（树冠多层蓬松，更立体）
-          const tree = new THREE.Group();
-          const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.42, .62, 3.0, 10), new THREE.MeshStandardMaterial({ color: 0x6b4a30, roughness: 1 }));
-          trunk.position.y = 1.5; tree.add(trunk);
-          const trunkBranch = new THREE.Mesh(new THREE.CylinderGeometry(.14, .2, 1.0, 8), new THREE.MeshStandardMaterial({ color: 0x6b4a30, roughness: 1 }));
-          trunkBranch.position.set(.7, 2.3, 0); trunkBranch.rotation.z = .7; tree.add(trunkBranch);
-          const leafMats = [new THREE.MeshStandardMaterial({ color: 0x2f8a4c, roughness: .85 }), new THREE.MeshStandardMaterial({ color: 0x37a35a, roughness: .85 })];
-          const crown = [[0, 3.2, 0, 1.45, 0], [.72, 3.02, .28, 1.02, 1], [-.72, 3.02, -.28, 1.02, 1], [.34, 3.72, .42, .98, 1], [-.34, 3.72, -.42, .98, 1], [0, 3.28, -.7, .88, 1], [.1, 3.98, .1, .82, 0]];
-          for (const c of crown) {
-            const l = new THREE.Mesh(new THREE.SphereGeometry(c[3], 14, 12), leafMats[c[4]]);
-            l.position.set(c[0], c[1], c[2]); tree.add(l);
-          }
-          tree.position.set(-4, 0, 0); g.add(tree); shadowRec(tree, true, false);
-          // 15 个苹果（上下两层环分布）
-          const appleMat = new THREE.MeshPhysicalMaterial({ color: 0xe0442e, roughness: .28, metalness: 0, clearcoat: .6, clearcoatRoughness: .3 });
-          this.apples = [];
-          for (let i = 0; i < 15; i++) {
-            const m = new THREE.Mesh(new THREE.SphereGeometry(.27, 16, 14), appleMat);
-            m.scale.y = .92;
-            m.position.copy(applePos(i));
-            m.userData.idx = i;
-            m.castShadow = true;
-            g.add(m); this.apples.push(m);
-          }
-          // 天平称：左边托盘放苹果，右边托盘放砝码（砝码值＝需要数）
-          const scale = new THREE.Group(); scale.position.set(2.0, 0, 0);
-          const postMat = new THREE.MeshStandardMaterial({ color: 0x8a6a3c, roughness: .75 });
-          const metalMat = new THREE.MeshStandardMaterial({ color: 0xd8dbe4, roughness: .35, metalness: .55 });
-          const goldMat = new THREE.MeshStandardMaterial({ color: 0xffc94d, emissive: 0xff9d2e, emissiveIntensity: .3, metalness: .5, roughness: .35 });
-          const scBase = new THREE.Mesh(new THREE.CylinderGeometry(.55, .7, .3, 16), postMat); scBase.position.y = .15; scale.add(scBase);
-          const scPost = new THREE.Mesh(new THREE.CylinderGeometry(.16, .22, 2.3, 12), postMat); scPost.position.y = 1.45; scale.add(scPost);
-          const scTop = new THREE.Mesh(new THREE.SphereGeometry(.22, 12, 10), goldMat); scTop.position.y = 2.83; scale.add(scTop);
-          // 横梁：绕中心旋转，倾斜角度表达“苹果轻 / 苹果重 / 平衡”
-          const beam = new THREE.Group(); beam.position.set(0, 2.6, 0);
-          const bar = new THREE.Mesh(new THREE.BoxGeometry(3.5, .15, .13), metalMat); beam.add(bar);
-          const pivot = new THREE.Mesh(new THREE.CylinderGeometry(.14, .14, .3, 12), goldMat); pivot.rotation.z = Math.PI / 2; beam.add(pivot);
-          scale.add(beam);
-          this.beam = beam; this.tiltT = 0; this.bounceT = undefined;
-          // 两条竖链（固定长，随托盘上下）
-          const chainMat = new THREE.MeshStandardMaterial({ color: 0xb9bec9, roughness: .4, metalness: .6 });
-          const chainL = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, 1.0, 6), chainMat); scale.add(chainL);
-          const chainR = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, 1.0, 6), chainMat); scale.add(chainR);
-          this.chainL = chainL; this.chainR = chainR;
-          // 左右托盘（永远保持水平，只上下移动，高低差就是“轻重”）
-          const panMat = new THREE.MeshStandardMaterial({ color: 0xc98a3e, roughness: .8 });
-          const makePan = () => {
-            const p = new THREE.Group();
-            const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.8, .5, .18, 18), panMat); bowl.position.y = 0; p.add(bowl);
-            const rim = new THREE.Mesh(new THREE.TorusGeometry(.8, .05, 8, 22), panMat); rim.rotation.x = Math.PI / 2; rim.position.y = .09; p.add(rim);
-            scale.add(p);
-            return p;
-          };
-          this.panL = makePan(); this.panR = makePan();
-          // 砝码（右边托盘上，数字＝需要数）
-          const weight = new THREE.Group();
-          const wBody = new THREE.Mesh(new THREE.CylinderGeometry(.34, .38, .5, 14), goldMat); wBody.position.y = .3; weight.add(wBody);
-          const wHandle = new THREE.Mesh(new THREE.TorusGeometry(.17, .05, 8, 14, Math.PI), goldMat); wHandle.position.y = .62; weight.add(wHandle);
-          this.weightNum = textSprite('0', { size: 88, color: '#6b3d00', unit: .5, pad: 0 });
-          this.weightNum.position.set(0, .3, .4); weight.add(this.weightNum);
-          weight.position.y = .2; this.panR.add(weight);
-          this.panC = new THREE.Vector3(0.25, 0, 0);
-          // 天平状态词（浮在横梁上方，配合倾斜显示“轻/重/平衡”）
-          this.balanceWord = textSprite('', { size: 60, color: '#9ee6ff', unit: 1.5, bg: 'rgba(10,14,31,.7)', pad: 10 });
-          this.balanceWord.position.set(0, 3.85, 0); scale.add(this.balanceWord);
-          g.add(scale);
-          // 萤火虫粒子（漂浮氛围）
-          const fgN = 30;
-          const fgPos = new Float32Array(fgN * 3);
-          for (let i = 0; i < fgN; i++) { fgPos[i * 3] = rand(-9, 9); fgPos[i * 3 + 1] = rand(1.2, 4.2); fgPos[i * 3 + 2] = rand(-7, 7); }
-          const fgGeo = new THREE.BufferGeometry();
-          fgGeo.setAttribute('position', new THREE.BufferAttribute(fgPos, 3));
-          this.fireflies = {
-            geo: fgGeo,
-            base: fgPos.slice(),
-            mat: new THREE.PointsMaterial({ color: 0xffe9a3, size: .15, transparent: true, opacity: .85, sizeAttenuation: true, depthWrite: false })
-          };
-          g.add(new THREE.Points(fgGeo, this.fireflies.mat));
-          this.appleG = g;
-        },
-        start(level, afterEnd) {
-          this.afterEnd = afterEnd;
-          this.level = level;
-          this.N = level === 1 ? randi(1, 5) : randi(1, 9);
-          this.X = 0; this.retries = 0; this.locked = false; this.won = false;
-          this.pickStep = level === 1 ? 1 : (level === 2 ? 2 : 3);
-          this.onTree = this.apples.slice();
-          this.panSlots = [];
-          // 记录原位并复位（15 个苹果，全部回到树冠外侧）
-          this.apples.forEach((a, i) => {
-            a.userData.home = applePos(i); a.userData.slot = -1;
-            a.visible = true; a.position.copy(a.userData.home);
-            this.appleG.add(a);
-          });
-          // 砝码数字 = 需要数
-          this.weightNum.material.map = textSprite(String(this.N), { size: 88, color: '#6b3d00', unit: .5, pad: 0 }).material.map;
-          this.weightNum.material.needsUpdate = true;
-          this.tiltT = clamp((this.X - this.N) * .18, -.4, .4);
-          this.bounceT = undefined;
-          this.updateStatus();
-          // 拖拽苹果
-          this.drag = new THREE.DragControls(this.apples, camera, renderer.domElement);
-          const self = this;
-          this.drag.addEventListener('dragstart', ev => {
-            const a = ev.object;
-            if (self.locked) return;
-            // 若苹果已在托盘里，先放回场景坐标再拖（DragControls 需要父级为单位变换）
-            if (a.parent !== self.appleG) {
-              const w = a.getWorldPosition(new THREE.Vector3());
-              self.appleG.add(a); a.position.copy(w);
-            }
-            Sfx.pick();
-          });
-          this.drag.addEventListener('dragend', ev => {
-            const a = ev.object;
-            if (self.locked) return;
-            if (self.onTree.includes(a)) {
-              // 用水平距离判定是否拖到了左边托盘上方（俯视视角下 3D 距离够不到托盘）
-              const dx = a.position.x - self.panC.x, dz = a.position.z - self.panC.z;
-              if (Math.hypot(dx, dz) < 1.4) {
-                Sfx.drop(); self.addToPan(a);
-              } else {
-                tween(a.position, a.userData.home, .25, easeOut);
-              }
-            } else {
-              // 从托盘上拖出 → 放回托盘原位
-              self.panL.add(a);
-              a.position.copy(self.panSlotPos(a.userData.slot));
-            }
-          });
-          this.dragEnabled = true;
-          this.buildUI();
-        },
-        panSlotPos(slot) {
-          const c = slot % 3 - 1, zz = Math.floor(slot / 3);
-          return new THREE.Vector3(c * .2, .2 + zz * .24, (zz % 2 ? .16 : -.16));
-        },
-        dropIntoPan(a) {
-          const slot = this.panSlots.length;
-          this.panSlots.push(a); a.userData.slot = slot;
-          const tgt = this.panSlotPos(slot);
-          const w = a.getWorldPosition(new THREE.Vector3());
-          this.panL.add(a);
-          a.position.copy(this.panL.worldToLocal(w));
-          const self = this;
-          tween(a.position, tgt, .24, easeInOut, () => { a.position.copy(tgt); self.updateStatus(); });
-        },
-        addToPan(a) {
-          this.onTree = this.onTree.filter(x => x !== a);
-          this.dropIntoPan(a);
-          this.X++;
-          this.updateStatus();
-        },
-        pickGroup(n) {
-          if (this.locked) return;
-          let taken = 0;
-          for (const a of this.onTree.slice()) {
-            if (taken >= n) break;
-            this.addToPan(a);
-            taken++;
-          }
-          if (taken > 0) Sfx.drop();
-        },
-        updateStatus() {
-          const st = $('statusLine');
-          const x = this.X, n = this.N;
-          this.tiltT = clamp((x - n) * .18, -.4, .4);
-          let word, color;
-          if (x < n) { word = '苹果轻，再放几个'; color = '#ffd75e'; }
-          else if (x > n) { word = '苹果太重了！'; color = '#ff8a7a'; }
-          else { word = '平衡啦！'; color = '#8fe8b0'; }
-          st.innerHTML = '左边托盘 <b style="color:#fff">' + x + '</b> 个苹果 · 砝码 <b style="color:#ffd75e">' + n + '</b> — <b style="color:' + color + '">' + word + '</b>';
-          this.balanceWord.material.map = textSprite(word, { size: 60, color: color, unit: 1.5, bg: 'rgba(10,14,31,.7)', pad: 10 }).material.map;
-          this.balanceWord.material.needsUpdate = true;
-          if (x === n && !this.won) { this.won = true; setTimeout(() => this.celebrate(), 450); }
-          if (x > n && !this.locked) { this.locked = true; this.retries++; Sfx.fail(); toast('太重了！苹果比砝码重，重新开始'); setTimeout(() => this.restartPick(), 1300); }
-        },
-        restartPick() {
-          for (const a of this.apples) {
-            this.appleG.add(a);
-            a.visible = true;
-            a.position.copy(a.userData.home);
-          }
-          this.panSlots = [];
-          this.X = 0; this.locked = false; this.won = false;
-          this.tiltT = clamp((0 - this.N) * .18, -.4, .4);
-          this.updateStatus();
-        },
-        celebrate() {
-          this.locked = true; Sfx.win();
-          this.tiltT = 0; this.bounceT = 0;
-          toast('平衡啦！' + this.N + ' 个苹果和砝码一样重，全对！');
-          setTimeout(() => this.finishWin(), 1600);
-        },
-        finishWin() {
-          this.locked = true;
-          const stars = this.retries === 0 ? 3 : (this.retries <= 1 ? 2 : 1);
-          const coins = 10 + (stars - 1) * 5;
-          SAVE.coins += coins; SAVE.stars += stars;
-          if (!SAVE.best[0] || (SAVE.best[0][this.level - 1] || 0) < stars) { (SAVE.best[0] = SAVE.best[0] || []); SAVE.best[0][this.level - 1] = stars; }
-          persist(); refreshHud();
-          showRating('摘苹果', stars, coins, this.afterEnd);
-        },
-        buildUI() {
-          clearUI();
-          if (this.pickStep > 1) {
-            for (let i = 1; i <= this.pickStep; i++) {
-              uiBtn('摘 ' + i + ' 个', () => this.pickGroup(i), 'gold');
-            }
-            uiMsg('点按钮一次摘几个苹果，放到左边托盘，让天平平衡');
-          } else {
-            uiMsg('拖动树上的苹果到左边托盘，直到天平平衡（两边一样高）');
-          }
-        },
-        update(dt, t) {
-          if (!this.fireflies) return;
-          const p = this.fireflies.geo.attributes.position.array;
-          for (let i = 0; i < this.fireflies.base.length; i += 3) {
-            p[i] = this.fireflies.base[i] + Math.sin(t * .55 + i) * .7;
-            p[i + 1] = this.fireflies.base[i + 1] + Math.sin(t * .85 + i * 1.7) * .4;
-            p[i + 2] = this.fireflies.base[i + 2] + Math.cos(t * .65 + i) * .7;
-          }
-          this.fireflies.geo.attributes.position.needsUpdate = true;
-          this.fireflies.mat.opacity = .55 + Math.sin(t * 2.2) * .25;
-          // 天平：横梁倾斜 + 托盘高低（轻的一头翘起来）
-          this.beam.rotation.z += (this.tiltT - this.beam.rotation.z) * Math.min(1, dt * 4.5);
-          if (this.bounceT !== undefined) {
-            this.bounceT += dt;
-            if (this.bounceT < 1.5) {
-              const k = Math.max(0, 1 - this.bounceT / 1.5);
-              this.beam.rotation.z += Math.sin(this.bounceT * 11) * .06 * k;
-            }
-          }
-          const th = this.beam.rotation.z, cosT = Math.cos(th), sinT = Math.sin(th);
-          const arm = 1.75, px = 2.0, py = 2.6, panY = 1.42;
-          this.panL.position.set(px - arm * cosT, panY - arm * sinT, 0);
-          this.panR.position.set(px + arm * cosT, panY + arm * sinT, 0);
-          this.chainL.position.set(px - arm * cosT, 2.10 - arm * sinT, 0);
-          this.chainR.position.set(px + arm * cosT, 2.10 + arm * sinT, 0);
-        },
-        end() { if (this.drag && this.drag.dispose) this.drag.dispose(); clearUI(); $('statusLine').innerHTML = ''; }
-      };
-
-      /* ---------------- 游戏 2：扶老奶奶过马路 ---------------- */
-      const crossG = makeGroup('cross');
-      const crossGame = {
-        init() {
-          const g = crossG;
-          g.add(new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: 0x1a2238, roughness: 1 })).rotateX(-Math.PI / 2));
-          addLightTo('cross', new THREE.DirectionalLight(0xffffff, 1)); addLightTo('cross', new THREE.AmbientLight(0xffffff, .5));
-          // 斑马线
-          const zebra = new THREE.MeshStandardMaterial({ color: 0xdfe6ff, roughness: .8 });
-          for (let i = 0; i < 7; i++) {
-            const m = new THREE.Mesh(new THREE.PlaneGeometry(.8, 2.4), zebra); m.rotation.x = -Math.PI / 2; m.position.set(-3 + i * .9, .01, 1.6); g.add(m);
-          }
-          // 数轴 0-9
-          for (let i = 0; i <= 9; i++) {
-            const x = -4.5 + i;
-            const mark = new THREE.Mesh(new THREE.BoxGeometry(.14, .1, .14), new THREE.MeshStandardMaterial({ color: 0x8fe8ff }));
-            mark.position.set(x, .06, -1); g.add(mark);
-            const num = textSprite(String(i), { size: 56, color: '#9ee6ff', unit: .72, pad: 0 });
-            num.position.set(x, .5, -1); g.add(num);
-          }
-          // 红绿灯杆
-          const pole = new THREE.Mesh(new THREE.CylinderGeometry(.1, .14, 4.4, 10), new THREE.MeshStandardMaterial({ color: 0x666b7a }));
-          pole.position.set(4.8, 2.2, -1.6); g.add(pole);
-          const lampBox = new THREE.Mesh(new THREE.BoxGeometry(.9, 2, .5), new THREE.MeshStandardMaterial({ color: 0x2b2f3d }));
-          lampBox.position.set(4.8, 4.4, -1.6); g.add(lampBox);
-          this.greenLamp = new THREE.Mesh(new THREE.SphereGeometry(.28, 14, 12), new THREE.MeshBasicMaterial({ color: 0x2f8a4c }));
-          this.greenLamp.position.set(4.8, 4.9, -1.6); g.add(this.greenLamp);
-          this.redLamp = new THREE.Mesh(new THREE.SphereGeometry(.28, 14, 12), new THREE.MeshBasicMaterial({ color: 0x4a2f2c }));
-          this.redLamp.position.set(4.8, 3.9, -1.6); g.add(this.redLamp);
-          // 老奶奶
-          const gm = new THREE.Group();
-          gm.add(new THREE.Mesh(new THREE.CapsuleGeometry(.35, .6, 6, 12), new THREE.MeshStandardMaterial({ color: 0x8a5a8a })).translateY(1.0));
-          gm.add(new THREE.Mesh(new THREE.SphereGeometry(.28, 16, 14), new THREE.MeshStandardMaterial({ color: 0xffe0c0 })).translateY(1.72));
-          const scarf = new THREE.Mesh(new THREE.ConeGeometry(.34, .5, 10), new THREE.MeshStandardMaterial({ color: 0xd94a4a }));
-          scarf.position.y = 1.95; scarf.rotation.x = Math.PI; gm.add(scarf);
-          const cane = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, 1.3, 6), new THREE.MeshStandardMaterial({ color: 0x8a6a3a }));
-          cane.position.set(.4, .65, 0); cane.rotation.z = .3; gm.add(cane);
-          gm.position.set(-4.5, 0, 1.6); g.add(gm);
-          this.grandma = gm;
-          // 汽车
-          const car = new THREE.Group();
-          const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, .8, 1.3), new THREE.MeshStandardMaterial({ color: 0xe07840 }));
-          body.position.y = .55; car.add(body);
-          const cab = new THREE.Mesh(new THREE.BoxGeometry(1.3, .6, 1.2), new THREE.MeshStandardMaterial({ color: 0xfff2d0 }));
-          cab.position.set(-.3, 1.2, 0); car.add(cab);
-          for (const sx of [-.8, .8]) {
-            const w = new THREE.Mesh(new THREE.CylinderGeometry(.32, .32, .3, 12), new THREE.MeshStandardMaterial({ color: 0x22242e }));
-            w.rotation.z = Math.PI / 2; w.position.set(sx, .32, .65); car.add(w);
-            const w2 = w.clone(); w2.position.z = -.65; car.add(w2);
-          }
-          car.position.set(14, 0, -1.6); car.rotation.y = Math.PI; g.add(car);
-          this.car = car;
-          this.crossG = g;
-        },
-        start(level, afterEnd) {
-          this.afterEnd = afterEnd; this.level = level;
-          const cfg = [[5, 7, [1, 2]], [9, 9, [1, 2, 5]], [12, 12, [1, 2, 5]]][level - 1];
-          this.dist = cfg[0]; this.greenMax = cfg[1]; this.buttons = cfg[2];
-          this.green = this.greenMax; this.pos = 0; this.presses = 0; this.locked = false; this.won = false;
-          this.spacing = 9 / this.dist;
-          this.grandma.position.set(-4.5, 0, 1.6);
-          this.grandma.rotation.y = 0; this.grandma.scale.set(1, 1, 1);
-          this.car.position.set(14, 0, -1.6);
-          this.redLamp.material.color.setHex(0x4a2f2c); this.greenLamp.material.color.setHex(0x2f8a4c);
-          this.updateUI();
-          this.buildUI();
-        },
-        updateUI() {
-          const st = $('statusLine');
-          const remain = this.green >= 0 ? this.green : 0;
-          st.innerHTML = '老奶奶在 <b style="color:#fff">' + this.pos + '</b> / ' + this.dist + ' · 绿灯 <b style="color:#8fe8b0">' + remain + ' 秒</b>';
-          $('formula').textContent = '';
-          this.greenLamp.material.color.setHex(this.green > 0 ? 0x3fae62 : 0x2f3a2c);
-          this.redLamp.material.color.setHex(this.green > 0 ? 0x4a2f2c : 0xff4a3d);
-        },
-        press(v) {
-          if (this.locked) return;
-          const from = this.pos;
-          const to = Math.min(this.dist, this.pos + v);
-          this.pos = to; this.presses++; this.green--;
-          Sfx.tick();
-          const sx = -4.5 + to * this.spacing;
-          tween(this.grandma.position, { x: sx }, .3, easeOut, () => {
-            this.grandma.rotation.y = Math.sin(performance.now() / 80) * .1;
-          });
-          $('formula').textContent = '走了 ' + v + ' 步 → 现在 ' + to + ' · 绿灯 −1';
-          if (to === this.dist) { this.locked = true; setTimeout(() => this.win(), 450); }
-          else if (this.green <= 0) { this.locked = true; setTimeout(() => this.fail(), 450); }
-          this.updateUI();
-        },
-        win() {
-          Sfx.win();
-          tween(this.grandma.rotation, { y: 0 }, .2, easeOut);
-          const min = minPresses(this.dist, this.buttons);
-          const stars = this.presses === min ? 3 : (this.greenMax - this.presses >= Math.ceil(this.greenMax / 2) ? 2 : 1);
-          const coins = 10 + (stars - 1) * 5;
-          SAVE.coins += coins; SAVE.stars += stars;
-          if ((SAVE.best[1][this.level - 1] || 0) < stars) SAVE.best[1][this.level - 1] = stars;
-          persist(); refreshHud();
-          showRating('扶老奶奶过马路', stars, coins, this.afterEnd);
-        },
-        fail() {
-          Sfx.boom();
-          this.redLamp.material.color.setHex(0xff4a3d); this.greenLamp.material.color.setHex(0x2f3a2c);
-          toast('红灯！汽车来了…老奶奶被风吹回起点');
-          tween(this.car.position, { x: 1 }, .8, easeInOut, () => {
-            Sfx.fail();
-            this.car.position.x = 14;
-            tween(this.grandma.scale, { x: 0.1, y: .1, z: .1 }, .35, easeOut, () => {
-              this.grandma.scale.set(1, 1, 1); this.grandma.position.set(-4.5, 0, 1.6);
-              this.pos = 0; this.green = this.greenMax; this.locked = false;
-              this.updateUI();
-            });
-          });
-        },
-        buildUI() {
-          clearUI();
-          for (const v of this.buttons) uiBtn('+' + v, () => this.press(v), 'green');
-          uiMsg('每按一次：老奶奶前进，绿灯 −1 秒');
-        },
-        end() { clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; }
-      };
-
-      /* ---------------- 游戏 3：帮小男孩爬楼梯 ---------------- */
-      const stairG = makeGroup('stair');
-      const stairGame = {
-        init() {
-          const g = stairG;
-          g.add(new THREE.Mesh(new THREE.PlaneGeometry(30, 24), new THREE.MeshStandardMaterial({ color: 0x182038, roughness: 1 })).rotateX(-Math.PI / 2));
-          addLightTo('stair', new THREE.DirectionalLight(0xffffff, 1.1)); addLightTo('stair', new THREE.AmbientLight(0xffffff, .45));
-          // 9 层楼
-          const floorMat = new THREE.MeshStandardMaterial({ color: 0x3d4e6e, roughness: .8 });
-          const wallMat = new THREE.MeshStandardMaterial({ color: 0x2b3560, roughness: .85 });
-          for (let i = 0; i < 9; i++) {
-            const y = 1 + i * 1.15;
-            const floor = new THREE.Mesh(new THREE.BoxGeometry(4.4, .3, 3.4), floorMat); floor.position.set(0, y, 0); g.add(floor);
-            const wall = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.15, .2), wallMat); wall.position.set(0, y + .73, -1.7); g.add(wall);
-            const num = textSprite(String(i + 1), { size: 64, color: '#9ee6ff', unit: .9, pad: 0 });
-            num.position.set(2.6, y + .55, 0); g.add(num);
-            const win = new THREE.Mesh(new THREE.BoxGeometry(1.6, .8, .1), new THREE.MeshBasicMaterial({ color: 0xffd98a }));
-            win.position.set(0, y + .8, -1.58); g.add(win);
-          }
-          // 小男孩
-          const boy = new THREE.Group();
-          boy.add(new THREE.Mesh(new THREE.CapsuleGeometry(.3, .5, 6, 12), new THREE.MeshStandardMaterial({ color: 0x3f9bd9 })).translateY(.85));
-          boy.add(new THREE.Mesh(new THREE.SphereGeometry(.26, 16, 14), new THREE.MeshStandardMaterial({ color: 0xffe0c0 })).translateY(1.5));
-          boy.add(new THREE.Mesh(new THREE.TorusGeometry(.42, .16, 10, 18), new THREE.MeshStandardMaterial({ color: 0xffffff })).translateY(1.18));
-          this.boyFace = new THREE.Sprite(new THREE.SpriteMaterial({ map: faceTex('happy'), transparent: true }));
-          this.boyFace.scale.set(.9, .8, 1); this.boyFace.position.set(0, 1.62, .28); boy.add(this.boyFace);
-          boy.position.set(0, 1, 0); g.add(boy);
-          this.boy = boy;
-          this.stairG = g;
-        },
-        start(level, afterEnd) {
-          this.afterEnd = afterEnd; this.level = level;
-          this.errors = 0; this.locked = false; this.nVal = undefined;
-          this.phase = 0; // 0=单步; 1/2=两步的第一/第二段
-          if (level === 3) {
-            this.F = randi(1, 3); this.a = randi(5, 9); this.mid = this.F + this.a;
-            do { this.b = randi(1, 9); this.T = this.mid - this.b; } while (this.T < 1 || this.T > 9);
-            this.phase = 1;
-            this.showEq('F + a = ?', '第 1 步：填 a，让男孩从 ' + this.F + ' 层上升');
-          } else {
-            this.F = randi(1, level === 1 ? 4 : 8);
-            if (level === 1) {
-              this.sign = '+'; this.T = randi(this.F + 1, Math.min(5, this.F + 3));
-            } else {
-              this.sign = Math.random() < .5 ? '+' : '-';
-              if (this.sign === '+') {
-                this.T = randi(this.F + 1, Math.min(9, this.F + 9));
-              } else if (this.F >= 2) {
-                this.T = randi(1, this.F - 1);
-              } else {
-                this.sign = '+'; this.T = randi(this.F + 1, Math.min(9, this.F + 9));
-              }
-            }
-            this.n = this.sign === '+' ? this.T - this.F : this.F - this.T;
-            this.showEq('F ○ n = T', '男孩在 ' + this.F + ' 层，要到 ' + this.T + ' 层');
-          }
-          this.boy.position.set(0, 1 + (this.F - 1) * 1.15, 0);
-          this.setFace('happy');
-          this.updateInfo();
-          this.buildUI();
-        },
-        showEq(tpl, hint) {
-          this.tpl = tpl; this.hintBase = hint;
-        },
-        updateInfo() {
-          const st = $('statusLine');
-          const nv = (this.nVal !== undefined && this.nVal !== null) ? this.nVal : '?';
-          if (this.phase === 1) {
-            st.innerHTML = '第 1 步：<b style="color:#fff">' + this.F + ' ＋ <span id="nv">' + nv + '</span> ＝ ' + this.mid + '</b>';
-          } else if (this.phase === 2) {
-            st.innerHTML = '第 2 步：<b style="color:#fff">' + this.mid + ' − <span id="nv">' + nv + '</span> ＝ ' + this.T + '</b>';
-          } else {
-            const op = this.sign === '+' ? '＋' : '−';
-            st.innerHTML = '男孩在 <b style="color:#9ee6ff">' + this.F + '</b> 层 · 要到 <b style="color:#ffd75e">' + this.T + '</b> 层：<b>' + this.F + ' ' + op + ' <span id="nv">' + nv + '</span> ＝ ' + this.T + '</b>';
-          }
-        },
-        setFace(mood) { this.boyFace.material.map = faceTex(mood); this.boyFace.material.needsUpdate = true; },
-        setSign(s) { this.sign = s; this.updateInfo(); },
-        setN(n) { this.nVal = n; const el = $('nv'); if (el) el.textContent = n; },
-        go() {
-          const n = this.nVal;
-          if (n === undefined || n === null || n === '') { toast('请先输入数字'); return; }
-          if (this.locked) return;
-          if (this.phase === 1) {
-            if (this.F + n !== this.mid) { this.wrong(); return; }
-            this.locked = true; Sfx.whoosh();
-            tween(this.boy.position, { y: 1 + (this.mid - 1) * 1.15 }, .8, easeInOut, () => {
-              this.phase = 2; this.locked = false; this.nVal = undefined;
-              this.updateInfo(); this.buildUI();
-            });
-          } else if (this.phase === 2) {
-            if (this.mid - n !== this.T) { this.wrong(); return; }
-            this.locked = true; Sfx.whoosh();
-            tween(this.boy.position, { y: 1 + (this.T - 1) * 1.15 }, .8, easeInOut, () => this.win());
-          } else {
-            const ok = this.sign === '+' ? (this.F + n === this.T) : (this.F - n === this.T);
-            if (!ok) { this.wrong(); return; }
-            this.locked = true; Sfx.whoosh();
-            tween(this.boy.position, { y: 1 + (this.T - 1) * 1.15 }, .8, easeInOut, () => this.win());
-          }
-        },
-        wrong() {
-          this.errors++; Sfx.cry(); this.setFace('cry');
-          tween(this.boy.scale, { x: 1.15, y: .9, z: 1.15 }, .12, null, () => tween(this.boy.scale, { x: 1, y: 1, z: 1 }, .18, easeOut, () => this.setFace('happy')));
-          if (this.errors >= 2) {
-            let hint;
-            if (this.phase === 1) hint = '提示：a ＝ ' + (this.mid - this.F);
-            else if (this.phase === 2) hint = '提示：b ＝ ' + (this.mid - this.T);
-            else hint = this.sign === '+' ? ('提示：n ＝ T − F ＝ ' + (this.T - this.F)) : ('提示：n ＝ F − T ＝ ' + (this.F - this.T));
-            toast(hint);
-          }
-          this.updateInfo();
-        },
-        win() {
-          Sfx.laugh(); this.setFace('happy');
-          const stars = this.errors === 0 ? 3 : (this.errors <= 1 ? 2 : 1);
-          const coins = 10 + (stars - 1) * 5;
-          SAVE.coins += coins; SAVE.stars += stars;
-          if ((SAVE.best[2][this.level - 1] || 0) < stars) SAVE.best[2][this.level - 1] = stars;
-          persist(); refreshHud();
-          showRating('帮小男孩爬楼梯', stars, coins, this.afterEnd);
-        },
-        buildUI() {
-          clearUI();
-          const row = document.createElement('div'); row.style.display = 'contents'; $('gameUI').appendChild(row);
-          if (this.phase === 1 || (this.phase === 0 && this.level >= 2)) {
-            const plus = uiBtn('＋ 加', () => { this.setSign('+'); }, 'green small');
-            const minus = uiBtn('− 减', () => { this.setSign('-'); }, 'red small');
-          }
-          for (let i = 0; i <= 9; i++) uiBtn(String(i), () => this.setN(i), 'tiny');
-          uiBtn('清空', () => { this.nVal = undefined; const el = $('nv'); if (el) el.textContent = '?'; }, 'small');
-          uiBtn('出发', () => this.go(), 'gold');
-        },
-        end() { clearUI(); $('statusLine').innerHTML = ''; }
-      };
-
-      /* ---------------- 游戏 4：打靶 ---------------- */
-      const shootG = makeGroup('shoot');
-      const shootGame = {
-        init() {
-          const g = shootG;
-          g.add(new THREE.Mesh(new THREE.PlaneGeometry(30, 26), new THREE.MeshStandardMaterial({ color: 0x182038, roughness: 1 })).rotateX(-Math.PI / 2));
-          addLightTo('shoot', new THREE.DirectionalLight(0xffffff, 1.1)); addLightTo('shoot', new THREE.AmbientLight(0xffffff, .5));
-          // 靶（0 环=靶心）
-          this.target = new THREE.Group();
-          const palette = [0xffd75e, 0xffb15e, 0xff8a5a, 0xff5a4d, 0xd94a8a, 0x8a5ad9, 0x5b6fc0, 0x3f9bd9, 0x4fae6d, 0x6b7280];
-          for (let r = 0; r < 10; r++) {
-            const ring = new THREE.Mesh(
-              new THREE.RingGeometry(r * .34, (r + 1) * .34, 40),
-              new THREE.MeshBasicMaterial({ color: palette[r], side: THREE.DoubleSide })
-            );
-            ring.rotation.x = -Math.PI / 2; ring.position.y = .02; this.target.add(ring);
-            const num = textSprite(String(r), { size: 40, color: '#ffffff', unit: .26, pad: 0 });
-            const mid = (r + .5) * .34;
-            num.position.set(mid * Math.cos(-.5), .2, mid * Math.sin(-.5)); this.target.add(num);
-          }
-          this.target.position.set(0, 2, -6); g.add(this.target);
-          // 靶架
-          const leg = new THREE.Mesh(new THREE.BoxGeometry(2.4, .1, .1), new THREE.MeshStandardMaterial({ color: 0x8a6a3a }));
-          leg.position.set(0, 1.6, -6); g.add(leg);
-          // 弓
-          const bow = new THREE.Group();
-          const bMat = new THREE.MeshStandardMaterial({ color: 0x8a5a2b });
-          const arc = new THREE.Mesh(new THREE.TorusGeometry(.6, .06, 8, 24, Math.PI), bMat);
-          arc.rotation.z = Math.PI / 2; arc.position.y = 1.6; bow.add(arc);
-          const str = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, 1.2, 6), new THREE.MeshStandardMaterial({ color: 0xcccccc }));
-          str.position.y = 1.6; bow.add(str);
-          bow.position.set(0, 0, 4.5); g.add(bow);
-          // 箭
-          const arrow = new THREE.Group();
-          const shaft = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0xc8a87a }));
-          shaft.rotation.x = Math.PI / 2; arrow.add(shaft);
-          const tip = new THREE.Mesh(new THREE.ConeGeometry(.09, .3, 10), new THREE.MeshStandardMaterial({ color: 0xdfe6ff }));
-          tip.rotation.x = -Math.PI / 2; tip.position.z = .72; arrow.add(tip);
-          arrow.position.set(0, 1.6, 3.8); g.add(arrow);
-          this.arrow = arrow;
-          this.shootG = g;
-        },
-        start(level, afterEnd) {
-          this.afterEnd = afterEnd; this.level = level;
-          const Dmax = [3, 5, 8][level - 1], Amax = [2, 5, 5][level - 1];
-          this.round = 1; this.total = 0; this.locked = false;
-          this.newRound(Dmax, Amax);
-          this.buildUI();
-        },
-        newRound(Dmax, Amax) {
-          this.D = randi(1, Dmax); this.A = randi(0, Amax);
-          this.F = 0;
-          this.arrow.visible = true; this.arrow.position.set(0, 1.6, 3.8);
-          this.arrow.rotation.set(0, 0, 0);
-          const st = $('statusLine');
-          st.innerHTML = '第 ' + this.round + ' / 3 轮 · 距离 <b style="color:#9ee6ff">' + this.D + '</b> · 角度 <b style="color:#9ee6ff">' + this.A + '</b> · 力度 <b style="color:#ffd75e" id="fv">' + this.F + '</b>';
-          $('formula').textContent = '目标：力度 ＝ 距离 ＋ 角度 ＝ ' + (this.D + this.A) + '（0 环）';
-          const slider = $('forceSlider');
-          if (slider) { slider.value = 0; slider.max = 20; }
-        },
-        shoot() {
-          if (this.locked) return;
-          this.locked = true; Sfx.whoosh();
-          const E = this.F - this.D - this.A;
-          const targetZ = -5.2, startZ = 3.8;
-          let endPos, isHit = false, ring = 0;
-          if (this.F < this.D || E < 0) { endPos = { x: 0, y: 0, z: (startZ + targetZ) / 2 }; isHit = false; }
-          else if (E > 9) { endPos = { x: E, y: 2.2, z: -14 }; isHit = false; }
-          else { ring = E; isHit = true; endPos = { x: (E * .34), y: 2 + Math.abs(E) * .12, z: targetZ }; }
-          const from = { x: this.arrow.position.x, y: this.arrow.position.y, z: this.arrow.position.z };
-          const t0 = performance.now(), dur = 900;
-          const self = this;
-          function step(now) {
-            let t = clamp((now - t0) / dur, 0, 1);
-            const yy = easeOut(t);
-            self.arrow.position.set(
-              from.x + (endPos.x - from.x) * yy,
-              from.y + (endPos.y - from.y) * yy + Math.sin(t * Math.PI) * .5,
-              from.z + (endPos.z - from.z) * yy
-            );
-            if (t < 1) requestAnimationFrame(step);
-            else {
-              self.arrow.visible = isHit || E <= 9;
-              self.resolve(isHit, ring, E);
-            }
-          }
-          requestAnimationFrame(step);
-        },
-        resolve(isHit, ring, E) {
-          const st = $('statusLine');
-          if (!isHit) {
-            st.innerHTML = '脱靶！0 分（力度 ' + this.F + '，有效值 ' + E + '）';
-            Sfx.fail();
-          } else {
-            const score = 10 - ring;
-            this.total += score;
-            Sfx.coin();
-            st.innerHTML = '命中 <b style="color:#ffd75e">' + ring + ' 环</b> ＋' + score + ' 分 · 本轮累计 <b>' + this.total + '</b>';
-          }
-          $('formula').textContent = '有效值 ＝ 力度 − 距离 − 角度 ＝ ' + this.F + ' − ' + this.D + ' − ' + this.A + ' ＝ ' + E;
-          setTimeout(() => {
-            if (this.round >= 3) this.finish();
-            else { this.round++; this.newRound([3, 5, 8][this.level - 1], [2, 5, 5][this.level - 1]); this.locked = false; }
-          }, 1600);
-        },
-        finish() {
-          const stars = this.total >= 25 ? 3 : (this.total >= 18 ? 2 : 1);
-          const coins = 10 + (stars - 1) * 5;
-          SAVE.coins += coins; SAVE.stars += stars;
-          if ((SAVE.best[3][this.level - 1] || 0) < stars) SAVE.best[3][this.level - 1] = stars;
-          persist(); refreshHud();
-          showRating('打靶', stars, coins, this.afterEnd, '总积分 ' + this.total + ' / 30');
-        },
-        buildUI() {
-          clearUI();
-          const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;align-items:center;gap:8px;background:rgba(10,14,31,.78);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:8px 14px';
-          const lab = document.createElement('span'); lab.style.cssText = 'font-size:16px;color:#fff;font-weight:700'; lab.textContent = '力度';
-          const slider = document.createElement('input'); slider.type = 'range'; slider.min = 0; slider.max = 20; slider.value = 0; slider.id = 'forceSlider';
-          slider.style.width = '200px';
-          slider.addEventListener('input', () => {
-            this.F = parseInt(slider.value, 10);
-            const el = $('fv'); if (el) el.textContent = this.F;
-          });
-          wrap.appendChild(lab); wrap.appendChild(slider);
-          $('gameUI').appendChild(wrap);
-          uiBtn('射箭', () => this.shoot(), 'gold');
-          uiMsg('调整力度后射箭，共 3 次机会');
-        },
-        end() { clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; }
-      };
-
-      /* ---------------- 游戏 5：时钟救援 ---------------- */
-      const clockG = makeGroup('clock');
-      const clockGame = {
-        init() {
-          const g = clockG;
-          g.add(new THREE.Mesh(new THREE.PlaneGeometry(26, 22), new THREE.MeshStandardMaterial({ color: 0x1a2238, roughness: 1 })).rotateX(-Math.PI / 2));
-          addLightTo('clock', new THREE.DirectionalLight(0xffffff, .9)); addLightTo('clock', new THREE.AmbientLight(0xffffff, .5));
-          // 小猫与纸箱
-          const box = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.2, 1.9), new THREE.MeshStandardMaterial({ color: 0xc98a3e, roughness: .8 }));
-          box.position.set(-3.4, .6, -2); g.add(box);
-          this.kitten = new THREE.Group();
-          const kMat = new THREE.MeshStandardMaterial({ color: 0xffb366, roughness: .8 });
-          this.kitten.add(new THREE.Mesh(new THREE.CapsuleGeometry(.34, .5, 6, 12), kMat).translateY(.6));
-          this.kitten.add(new THREE.Mesh(new THREE.SphereGeometry(.3, 16, 14), kMat).translateY(1.2));
-          const earMat = new THREE.MeshStandardMaterial({ color: 0xffb366 });
-          for (const sx of [-.18, .18]) {
-            const ear = new THREE.Mesh(new THREE.ConeGeometry(.12, .16, 8), earMat);
-            ear.position.set(sx, 1.55, -.1); this.kitten.add(ear);
-          }
-          const eyeMat = new THREE.MeshStandardMaterial({ color: 0x2b2b3a });
-          for (const sx of [-.11, .11]) {
-            const eye = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 8), eyeMat);
-            eye.position.set(sx, 1.26, .27); this.kitten.add(eye);
-          }
-          this.kitten.position.set(-3.4, 0, -2); g.add(this.kitten);
-          // 圆形时钟
-          this.clockRing = new THREE.Mesh(
-            new THREE.TorusGeometry(2.0, .09, 12, 64),
-            new THREE.MeshStandardMaterial({ color: 0x5b6fc0, emissive: 0x3d4e9e, emissiveIntensity: .4 })
-          );
-          this.clockRing.rotation.x = Math.PI / 2; this.clockRing.position.set(3.2, 2.4, -1); g.add(this.clockRing);
-          for (let i = 0; i < 10; i++) {
-            const a = i * Math.PI * 2 / 10;
-            const tick = new THREE.Mesh(new THREE.BoxGeometry(.07, .28, .07), new THREE.MeshStandardMaterial({ color: 0xffffff }));
-            tick.position.set(3.2 + Math.cos(a) * 1.85, 2.4, -1 + Math.sin(a) * 1.85);
-            g.add(tick);
-            const num = textSprite(String(i), { size: 44, color: '#9ee6ff', unit: .5, pad: 0 });
-            num.position.set(3.2 + Math.cos(a) * 1.5, 2.4, -1 + Math.sin(a) * 1.5);
-            g.add(num);
-          }
-          this.hand = new THREE.Mesh(new THREE.BoxGeometry(.1, 1.6, .06), new THREE.MeshStandardMaterial({ color: 0xff5a4d, emissive: 0xff3d2e, emissiveIntensity: .5 }));
-          this.hand.position.set(3.2, 2.4 + .8, -1); g.add(this.hand);
-          this.clockBase = new THREE.Vector3(3.2, 2.4, -1);
-          this.clockG = g;
-        },
-        start(level, afterEnd) {
-          this.afterEnd = afterEnd; this.level = level;
-          const cfg = [[7, 5, [1, 2]], [12, 7, [1, 2, 5, -1, -2]], [18, 9, [1, 2, 5, -1, -2, -3]]][level - 1];
-          this.V = randi(level === 1 ? 5 : (level === 2 ? 8 : 10), cfg[0]);
-          this.airMax = cfg[1]; this.buttons = cfg[2];
-          this.value = 0; this.air = this.airMax; this.presses = 0; this.locked = false; this.won = false;
-          this.hand.position.set(this.clockBase.x, this.clockBase.y + .8, this.clockBase.z);
-          this.kitten.scale.set(1, 1, 1);
-          this.updateUI();
-          this.buildUI();
-        },
-        updateUI() {
-          const ones = this.value % 10, tens = Math.floor(this.value / 10);
-          $('statusLine').innerHTML =
-            '目标 <b style="color:#ffd75e">' + this.V + ' 秒</b> · 时钟 <b style="color:#9ee6ff">' + tens + ' ' + ones + '</b> · 空气 <b style="color:#8fe8b0">' + this.air + '/' + this.airMax + '</b> · 按键 ' + this.presses + ' 次';
-          const a = this.value / 10 * Math.PI * 2;
-          this.hand.position.set(this.clockBase.x + Math.sin(a) * .8, this.clockBase.y + Math.cos(a) * .8, this.clockBase.z);
-          this.kitten.scale.setScalar(1 + Math.sin(performance.now() / 400) * .03);
-        },
-        press(v) {
-          if (this.locked) return;
-          const prev = this.value;
-          this.value += v;
-          if (this.value < 0) this.value = 0;
-          this.presses++; this.air--;
-          Sfx.tick();
-          const carry = (this.value % 10) < (prev % 10) && this.value > prev;
-          const borrow = (this.value % 10) > (prev % 10) && this.value < prev;
-          $('formula').textContent = (v > 0 ? '+' : '') + v + ' → ' + prev + ' ' + (v >= 0 ? '＋' : '−') + Math.abs(v) + ' ＝ ' + this.value + (carry ? '（十位进 1）' : (borrow ? '（十位退 1）' : ''));
-          if (carry) { Sfx.coin(); toast('进 1！'); }
-          if (borrow) { Sfx.tick(); toast('退 1！'); }
-          if (this.value === this.V) { this.locked = true; setTimeout(() => this.win(), 350); }
-          else if (this.air <= 0) { this.locked = true; setTimeout(() => this.fail(), 350); }
-          this.updateUI();
-        },
-        win() {
-          Sfx.meow(); Sfx.win();
-          tween(this.kitten.scale, { x: 1.4, y: 1.4, z: 1.4 }, .4, easeOut);
-          const minAll = minPresses(this.V, this.buttons);
-          const stars = this.presses <= minAll + 1 ? 3 : (this.presses <= this.airMax - 1 ? 2 : 1);
-          const coins = 10 + (stars - 1) * 5;
-          SAVE.coins += coins; SAVE.stars += stars;
-          if ((SAVE.best[4][this.level - 1] || 0) < stars) SAVE.best[4][this.level - 1] = stars;
-          persist(); refreshHud();
-          showRating('时钟救援', stars, coins, this.afterEnd, '用了 ' + this.presses + ' 次按键');
-        },
-        fail() {
-          Sfx.fail(); toast('空气用完了…再试一次！');
-          setTimeout(() => {
-            this.value = 0; this.air = this.airMax; this.presses = 0; this.locked = false;
-            this.updateUI();
-          }, 1200);
-        },
-        buildUI() {
-          clearUI();
-          for (const v of this.buttons) {
-            const cls = v > 0 ? 'green' : 'red';
-            uiBtn((v > 0 ? '+' : '') + v, () => this.press(v), cls + ' small');
-          }
-          uiMsg('把时钟凑到目标秒数，按键越少越好');
-        },
-        end() { clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; }
-      };
-
-      /* ---------------- 游戏 6：方阵寻宝 ---------------- */
-      const matrixG = makeGroup('matrix');
-      const matrixGame = {
-        init() {
-          const g = matrixG;
-          g.add(new THREE.Mesh(new THREE.PlaneGeometry(26, 26), new THREE.MeshStandardMaterial({ color: 0x101830, roughness: 1 })).rotateX(-Math.PI / 2));
-          addLightTo('matrix', new THREE.DirectionalLight(0xffffff, .9)); addLightTo('matrix', new THREE.AmbientLight(0xffffff, .5));
-          const tileMat = new THREE.MeshStandardMaterial({ color: 0x27335c, roughness: .7, metalness: .2 });
-          this.tiles = [];
-          for (let r = 0; r < 10; r++) {
-            for (let c = 0; c < 10; c++) {
-              const tile = new THREE.Mesh(new THREE.BoxGeometry(.82, .12, .82), tileMat);
-              tile.position.set(c - 4.5, 0, r - 4.5);
-              tile.userData.baseColor = 0x27335c;
-              g.add(tile); this.tiles.push(tile);
-              const num = textSprite(String(r * 10 + c), { size: 30, color: '#8fa2e8', unit: .42, pad: 0 });
-              num.position.set(c - 4.5, .2, r - 4.5);
-              g.add(num);
-            }
-          }
-          // 玩家
-          this.player = new THREE.Mesh(
-            new THREE.CapsuleGeometry(.3, .4, 6, 12),
-            new THREE.MeshStandardMaterial({ color: 0xffd75e, emissive: 0xffb15e, emissiveIntensity: .3 })
-          );
-          this.player.position.set(.5, .3, .5);
-          g.add(this.player);
-          // 目标格
-          this.targetTile = new THREE.Mesh(new THREE.BoxGeometry(.9, .16, .9), new THREE.MeshBasicMaterial({ color: 0xff5a4d }));
-          this.targetTile.visible = false;
-          g.add(this.targetTile);
-          this.matrixG = g;
-        },
-        start(level, afterEnd) {
-          this.afterEnd = afterEnd; this.level = level;
-          this.Smax = level === 1 ? 1 : (level === 2 ? 3 : 5);
-          this.S = 1;
-          this.score = 100; this.steps = 0; this.locked = false; this.won = false;
-          do {
-            this.P = randi(0, 99);
-            if (level === 1) {
-              const dir = Math.random() < .5;
-              const step = randi(1, 9);
-              this.T = dir ? Math.min(99, this.P + step) : Math.max(0, this.P - step);
-              if (dir) this.T = this.P + Math.min(step, 9 - this.P % 10);
-              else this.T = this.P - Math.min(step, this.P % 10);
-            } else {
-              this.T = randi(0, 99);
-            }
-          } while (this.T === this.P);
-          this.updateGrid();
-          this.updateInfo();
-          this.buildUI();
-        },
-        updateGrid() {
-          const r = Math.floor(this.P / 10), c = this.P % 10;
-          this.player.position.set(c - 4.5, .3, r - 4.5);
-          const tr = Math.floor(this.T / 10), tc = this.T % 10;
-          this.targetTile.position.set(tc - 4.5, .1, tr - 4.5);
-          this.targetTile.visible = true;
-        },
-        updateInfo() {
-          $('statusLine').innerHTML =
-            '你在 <b style="color:#9ee6ff">' + this.P + '</b> · 目标 <b style="color:#ffd75e">' + this.T + '</b> · 步数 ' + this.steps + ' · 分数 <b style="color:#8fe8b0">' + this.score + '</b> · 步长 ' + this.S;
-        },
-        move(dir) {
-          if (this.locked || this.won) return;
-          const r = Math.floor(this.P / 10), c = this.P % 10;
-          let np = this.P, label = '';
-          if (dir === 'left') { if (c - this.S < 0) { this.oob(); return; } np = this.P - this.S; label = this.P + ' − ' + this.S + ' ＝ ' + np; }
-          else if (dir === 'right') { if (c + this.S > 9) { this.oob(); return; } np = this.P + this.S; label = this.P + ' ＋ ' + this.S + ' ＝ ' + np; }
-          else if (dir === 'up') { if (r - this.S < 0) { this.oob(); return; } np = this.P - 10 * this.S; label = this.P + ' − ' + (10 * this.S) + ' ＝ ' + np; }
-          else if (dir === 'down') { if (r + this.S > 9) { this.oob(); return; } np = this.P + 10 * this.S; label = this.P + ' ＋ ' + (10 * this.S) + ' ＝ ' + np; }
-          this.P = np; this.steps++;
-          this.score -= Math.max(1, 5 - this.S);
-          Sfx.tick();
-          this.updateGrid();
-          $('formula').textContent = label;
-          this.updateInfo();
-          if (this.P === this.T) { this.won = true; this.locked = true; setTimeout(() => this.win(), 400); }
-        },
-        oob() {
-          this.score = Math.max(0, this.score - 1);
-          toast('出界！扣 1 分');
-          this.updateInfo();
-        },
-        hint() {
-          if (this.locked || this.won) return;
-          this.score = Math.max(0, this.score - 1);
-          Sfx.click();
-          const tr = Math.floor(this.T / 10), tc = this.T % 10;
-          for (const t of this.tiles) {
-            if (Math.round(t.position.x + 4.5) === tc || Math.round(t.position.z + 4.5) === tr) {
-              t.material = new THREE.MeshBasicMaterial({ color: 0x8fe8ff });
-            }
-          }
-          toast('高亮了目标的行与列（−1 分）');
-          setTimeout(() => {
-            for (const t of this.tiles) t.material = new THREE.MeshStandardMaterial({ color: 0x27335c, roughness: .7, metalness: .2 });
-          }, 1600);
-          this.updateInfo();
-        },
-        win() {
-          Sfx.win();
-          const stars = this.score >= 90 ? 3 : (this.score >= 80 ? 2 : 1);
-          const coins = 10 + (stars - 1) * 5;
-          SAVE.coins += coins; SAVE.stars += stars;
-          if ((SAVE.best[5][this.level - 1] || 0) < stars) SAVE.best[5][this.level - 1] = stars;
-          persist(); refreshHud();
-          showRating('方阵寻宝', stars, coins, this.afterEnd, '剩余 ' + this.score + ' 分');
-        },
-        buildUI() {
-          clearUI();
-          uiBtn('← 左', () => this.move('left'), 'small');
-          uiBtn('→ 右', () => this.move('right'), 'small');
-          uiBtn('↑ 上', () => this.move('up'), 'small');
-          uiBtn('↓ 下', () => this.move('down'), 'small');
-          const row = document.createElement('div'); row.className = 'grow'; $('gameUI').appendChild(row);
-          for (let s = 1; s <= this.Smax; s++) uiBtn('步长 ' + s, () => { this.S = s; this.updateInfo(); }, 'tiny');
-          uiBtn('提示(−1分)', () => this.hint(), 'gold tiny');
-        },
-        end() { clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; this.targetTile.visible = false; }
-      };
-
-      /* ---------------- 场景切换与流程 ---------------- */
-      const gameInstances = [appleGame, crossGame, stairGame, shootGame, clockGame, matrixGame];
-      const gameNames = ['摘苹果', '扶老奶奶过马路', '帮小男孩爬楼梯', '打靶', '时钟救援', '方阵寻宝'];
-      const gameDescs = [
-        '把树上的苹果摘到左边托盘，让天平平衡：右边砝码是多少，就摘多少个苹果。数字就是苹果的个数。',
-        '按 ＋1/＋2/＋5 让老奶奶走过数轴，绿灯用光前到达终点。步数越少分越高。',
-        '男孩在 F 层，要到 T 层。填上 ＋/− 和数字，让他到达目标楼层。',
-        '距离 ＋ 角度 ＝ 力度才能中 0 环（靶心最高分）。三次机会累计积分。',
-        '用 ＋/− 按钮把时钟凑到目标秒数。个位逢九进一、逢零退一。按键越少越好。',
-        '在 0–99 方阵里走到目标格。左减 S、右加 S、上减 10S、下加 10S。'
-      ];
-
-      let activeName = 'world';
-      let currentGame = -1, currentLevel = 1, pendingAfterEnd = null;
-
-      function toast(msg) {
-        const t = $('toast'); t.textContent = msg; t.classList.add('show');
-        clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2000);
-      }
-
-      /* UI 工具 */
-      function clearUI() { $('gameUI').innerHTML = ''; }
-      function uiBtn(label, fn, cls) {
-        const b = document.createElement('button');
-        b.className = 'gbtn ' + (cls || '');
-        b.textContent = label;
-        b.addEventListener('click', () => { audio(); Sfx.click(); fn(); });
-        $('gameUI').appendChild(b);
-        return b;
-      }
-      function uiMsg(html) {
-        const d = document.createElement('div');
-        d.className = 'gmsg'; d.innerHTML = html;
-        $('gameUI').appendChild(d);
-        return d;
-      }
-
-      /* 难度选择 + 开始 */
-      function showIntro(gameIdx, defLevel) {
-        currentGame = gameIdx - 1;
-        $('introTitle').textContent = gameNames[currentGame];
-        $('introDesc').innerHTML = gameDescs[currentGame] + '<br><span style="color:#ffd75e">最高记录：' + (maxBest(currentGame) || 0) + ' 星</span>';
-        const row = $('lvlRow'); row.innerHTML = '';
-        currentLevel = clamp(defLevel || 1, 1, 3);
-        const btns = [];
-        for (let l = 1; l <= 3; l++) {
-          const b = document.createElement('button');
-          b.className = 'lvlBtn' + (l === currentLevel ? ' on' : '');
-          b.textContent = '★'.repeat(l);
-          b.addEventListener('click', () => {
-            currentLevel = l;
-            btns.forEach(x => x.classList.remove('on'));
-            b.classList.add('on');
-            Sfx.click();
-          });
-          row.appendChild(b); btns.push(b);
-        }
-        $('introScreen').classList.remove('hidden');
-      }
-      $('introGo').addEventListener('click', () => {
-        $('introScreen').classList.add('hidden');
-        enterGame(currentGame, currentLevel);
-      });
-
-      function enterGame(idx, level) {
-        audio();
-        fadeIn(() => {
-          showOnly('world');
-          groups['world'].visible = false;
-          const keys = ['apple', 'cross', 'stair', 'shoot', 'clock', 'matrix'];
-          groups[keys[idx]].visible = true;
-          for (const k in groupLights) for (const l of groupLights[k]) l.visible = (k === keys[idx]);
-          const cams = [
-            [0, 7.5, 11, 0, 2, 0], [0, 12, 13, 0, 0, 1.6], [9, 7, 8, 0, 4, 0],
-            [0, 4, 10, 0, 2, -4], [0, 7, 9, 0, 1.2, -1], [0, 17, 11, 4.5, 0, 4.5]
-          ][idx];
-          camera.position.set(cams[0], cams[1], cams[2]);
-          camera.lookAt(cams[3], cams[4], cams[5]);
-          activeName = keys[idx];
-          $('backBtn').style.display = 'inline-block';
-          pendingAfterEnd = () => backToWorld();
-          gameInstances[idx].start(level, pendingAfterEnd);
-          fadeOut();
-        });
-      }
-
-      function backToWorld() {
-        if (currentGame >= 0 && gameInstances[currentGame].end) gameInstances[currentGame].end();
-        currentGame = -1;
-        fadeIn(() => {
-          showOnly('world');
-          camera.position.set(0, 14, 17); camera.lookAt(0, 1, 0);
-          activeName = 'world';
-          $('backBtn').style.display = 'none';
-          fadeOut();
-        });
-      }
-
-      /* 结算 */
-      function showRating(name, stars, coins, afterEnd, extra) {
-        $('ratingTitle').textContent = name + ' · 完成！';
-        const st = $('ratingStars');
-        st.innerHTML = '';
-        for (let i = 0; i < 3; i++) {
-          const s = document.createElement('span');
-          s.textContent = '★';
-          s.className = i < stars ? '' : 'off';
-          st.appendChild(s);
-        }
-        $('ratingGot').textContent = (extra ? extra + ' · ' : '') + '金币 +' + coins;
-        $('ratingScreen').classList.remove('hidden');
-        $('againBtn').onclick = () => {
-          $('ratingScreen').classList.add('hidden');
-          enterGame(currentGame >= 0 ? currentGame : 0, currentLevel);
-        };
-        $('backWorldBtn').onclick = () => {
-          $('ratingScreen').classList.add('hidden');
-          afterEnd && afterEnd();
-        };
-        audio(); Sfx.win();
-      }
-
-      /* 淡入淡出 */
-      function fadeIn(fn) { const f = $('fade'); f.classList.add('on'); setTimeout(() => { fn(); }, 260); }
-      function fadeOut() { const f = $('fade'); f.classList.remove('on'); }
-
-      /* ---------------- 主循环 ---------------- */
-      $('startBtn').addEventListener('click', () => {
-        audio(); Sfx.win();
-        $('startScreen').classList.add('hidden');
-        refreshHud();
-        toast('走向发光的柱子，点击进入游戏');
-      });
-      $('backBtn').addEventListener('click', backToWorld);
-
-      const clock = new THREE.Clock();
-      let lastT = performance.now();
-      function animate() {
-        requestAnimationFrame(animate);
-        const now = performance.now();
-        const dt = Math.min((now - lastT) / 1000, .05); lastT = now;
-        const t = now / 1000;
-        if (activeName === 'world') updateWorld(dt, t);
-        else if (activeName === 'apple' && appleGame.update) appleGame.update(dt, t);
-        renderer.render(scene, camera);
-      }
-
-      /* 初始化 */
-      (function boot() {
-        // 构建全部游戏场景（一次）
-        appleGame.init(); crossGame.init(); stairGame.init(); shootGame.init(); clockGame.init(); matrixGame.init();
-        groups['world'].visible = true;
-        showOnly('world');
-        refreshHud();
-        animate();
-      })();
-    } catch (e) {
-      const __err = (e && e.message) ? String(e.message) : '未知错误';
-      document.body.innerHTML =
-        '<div style="font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;color:#fff;background:#141b33;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;line-height:2">' +
-        '<div><h2 style="color:#ffd75e;margin:0 0 8px">数字星夜加载失败了</h2>' +
-        '<p style="margin:0 0 4px">这个游戏需要联网加载 three.js 才能运行。</p>' +
-        '<p style="margin:0 0 8px;color:#9aa3bd">请检查网络后刷新页面重试。</p>' +
-        '<p style="color:#5b6a8f;font-size:12px">' + __err + '</p></div></div>';
+function minPresses(target, coins){
+  if (target <= 0) return 0;
+  const d = {0:0}; const q = [0];
+  while (q.length){
+    const v = q.shift();
+    if (v === target) return d[v];
+    for (const c of coins){
+      const nv = v + c;
+      if (nv < 0 || nv > target || d[nv] !== undefined) continue;
+      d[nv] = d[v] + 1; q.push(nv);
     }
-  </script>
-</body>
+  }
+  return Infinity;
+}
 
+/* 存档 */
+let SAVE = { coins: 0, stars: 0, best: [[],[],[],[],[],[]] };
+try {
+  const raw = localStorage.getItem('numstarry_save');
+  if (raw) { const p = JSON.parse(raw); if (p && typeof p.coins === 'number') SAVE = p; }
+} catch(e){}
+function persist(){ try { localStorage.setItem('numstarry_save', JSON.stringify(SAVE)); } catch(e){} }
+function refreshHud(){
+  $('coinVal').textContent = SAVE.coins;
+  $('starVal').textContent = SAVE.stars;
+}
+
+/* ---------------- 2D 几何图形工厂 ---------------- */
+/* 所有图形都画在 x-y 平面上（z=0），用平涂颜色，正交相机正看 */
+function geo(shape, color, opt){
+  opt = opt || {};
+  return new THREE.Mesh(shape, new THREE.MeshBasicMaterial({
+    color: color,
+    transparent: !!opt.transparent,
+    opacity: (opt.opacity !== undefined ? opt.opacity : 1),
+    map: opt.map || null,
+    side: opt.side || THREE.FrontSide
+  }));
+}
+function rect(w, h, color, opt){ const m = geo(new THREE.PlaneGeometry(w, h), color, opt); return m; }
+function circ(r, color, opt){ const m = geo(new THREE.CircleGeometry(r, 36), color, opt); return m; }
+function ring(ir, or, color, opt){ const m = geo(new THREE.RingGeometry(ir, or, 44), color, opt); return m; }
+function tri(w, h, color, opt){ // 底 w 高 h 的等腰三角形（尖端朝上，中心在形心附近）
+  const s = new THREE.Shape();
+  s.moveTo(-w/2, -h/2); s.lineTo(w/2, -h/2); s.lineTo(0, h/2); s.closePath();
+  return geo(new THREE.ShapeGeometry(s), color, opt);
+}
+function lineSeg(x1, y1, x2, y2, color, th){
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(Math.max(len, .01), th || .06), new THREE.MeshBasicMaterial({ color }));
+  m.position.set((x1 + x2)/2, (y1 + y2)/2, 0);
+  m.rotation.z = Math.atan2(dy, dx);
+  return m;
+}
+function label(text, x, y, o){
+  const sp = textSprite(text, o || {});
+  sp.position.set(x, y, 0);
+  return sp;
+}
+/* 2D 火柴人：头(圆)+身体(矩形)+表情，可整体左右翻转 */
+function stickMan(color, o){
+  o = o || {};
+  const g = new THREE.Group();
+  const head = circ(.30, o.skin || 0xffe0c0); head.position.y = 1.6; g.add(head);
+  const body = rect(.5, 1.0, color); body.position.y = .85; g.add(body);
+  if (o.skirt){
+    const sk = tri(.9, .55, o.skirt); sk.position.y = .3; g.add(sk);
+  }
+  const face = new THREE.Sprite(new THREE.SpriteMaterial({ map: o.mood ? faceTex(o.mood) : faceTex('neutral'), transparent: true }));
+  face.scale.set(.95, .83, 1); face.position.set(0, 1.62, .1); g.add(face);
+  if (o.hat){ // 三角帽/围巾等装饰
+    const h = tri(.7, .5, o.hat); h.position.y = 1.95; g.add(h);
+  }
+  return g;
+}
+
+
+/* ---------------- 渲染引擎（2D 正交） ---------------- */
+const wrap = $('sceneWrap');
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+wrap.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0e1f);
+
+/* 2D 正交相机：竖向固定 ±9，横向按屏幕比例 */
+const camera = new THREE.OrthographicCamera(-16, 16, 9, -9, 0.1, 100);
+camera.position.set(0, 0, 10); camera.lookAt(0, 0, 0);
+
+window.addEventListener('resize', () => {
+  const w = window.innerWidth, h = window.innerHeight;
+  const halfH = 9, halfW = halfH * w / h;
+  camera.left = -halfW; camera.right = halfW; camera.top = halfH; camera.bottom = -halfH;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+/* ---------------- 组管理 ---------------- */
+const groups = {};
+const groupLights = {};
+function makeGroup(name){ const g = new THREE.Group(); scene.add(g); groups[name] = g; groupLights[name] = []; g.visible = false; return g; }
+function addLightTo(name, light){ groups[name].add(light); groupLights[name].push(light); }
+function showOnly(name){
+  for (const k in groups) groups[k].visible = (k === name);
+  for (const k in groupLights) for (const l of groupLights[k]) l.visible = (k === name);
+}
+
+/* =========================================================
+   一、2D 夜空世界：几何小女孩 + 六几何入口
+   ========================================================= */
+const worldG = makeGroup('world');
+
+/* 夜空渐变背景 + 地面 */
+(function(){
+  const cv = document.createElement('canvas'); cv.width = 64; cv.height = 64;
+  const x = cv.getContext('2d');
+  const gr = x.createLinearGradient(0, 0, 0, 64);
+  gr.addColorStop(0, '#0b1030'); gr.addColorStop(.55, '#121b3d'); gr.addColorStop(1, '#0a0e1f');
+  x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+  const tex = new THREE.CanvasTexture(cv); tex.encoding = THREE.sRGBEncoding;
+  const bg = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: tex });
+  bg.position.z = -5; worldG.add(bg);
+  // 地面（夜空下半的深色原野，几何矩形）
+  const ground = rect(40, 9.2, 0x141b33); ground.position.set(0, -4.6, -4.5); worldG.add(ground);
+  // 两条交汇的道路（灰色几何矩形 + 白色虚线小矩形）
+  const road1 = rect(40, 1.7, 0x39415c); road1.position.set(0, -2.6, -4.4); worldG.add(road1);
+  const road2 = rect(1.7, 9.2, 0x39415c); road2.position.set(5.5, -4.6, -4.4); worldG.add(road2);
+  for (let i = -16; i <= 16; i += 1.1){
+    const m = rect(.16, .5, 0xdfe6ff); m.position.set(i, -2.6, -4.3); worldG.add(m);
+    const m2 = rect(.5, .16, 0xdfe6ff); m2.position.set(5.5, i - 9, -4.3); worldG.add(m2);
+  }
+})();
+
+/* 星星（几何圆点阵） */
+const starPts = (function(){
+  const n = 420, pos = new Float32Array(n*3);
+  for (let i = 0; i < n; i++){
+    pos[i*3]   = rand(-20, 20);
+    pos[i*3+1] = rand(.5, 8.6);
+    pos[i*3+2] = -4.8;
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const m = new THREE.PointsMaterial({ color: 0xdfe8ff, size: 2.2, transparent: true, opacity: .9, sizeAttenuation: false });
+  const p = new THREE.Points(g, m); worldG.add(p); return p;
+})();
+
+/* 月亮（黄色大圆 + 光晕 + 睡觉表情） */
+(function(){
+  const glow = circ(1.9, 0xfff3c9, { transparent: true, opacity: .14 }); glow.position.set(12.6, 6.2, -4.7); worldG.add(glow);
+  const moon = circ(1.25, 0xfff3c9); moon.position.set(12.6, 6.2, -4.6); worldG.add(moon);
+  const face = new THREE.Sprite(new THREE.SpriteMaterial({ map: faceTex('sleep'), color: 0xfff3c9, transparent: true }));
+  face.scale.set(2.1, 1.8, 1); face.position.set(12.6, 6.15, -4.5); worldG.add(face);
+})();
+
+/* 云（半透明白色圆组） */
+const clouds = [];
+(function(){
+  for (let i = 0; i < 4; i++){
+    const g = new THREE.Group();
+    for (let j = 0; j < 3; j++){
+      const c = circ(rand(.5, 1.1), 0xffffff, { transparent: true, opacity: .15 });
+      c.position.set(rand(-1.5, 1.5), rand(-.2, .4), 0); g.add(c);
+    }
+    g.position.set(rand(-17, 17), rand(4.5, 7.5), -4.7);
+    worldG.add(g); clouds.push({ g, vx: rand(.04, .12) });
+  }
+})();
+
+/* 远处城市（几何矩形剪影 + 黄色小窗点） */
+(function(){
+  for (let i = 0; i < 26; i++){
+    const h = rand(1.2, 3.6);
+    const b = rect(rand(1.0, 1.8), h, 0x1b2446); b.position.set(rand(-19, 19), -0.6 - h/2, -4.6); worldG.add(b);
+    for (let w = 0; w < 3; w++){
+      const win = rect(.16, .22, 0xffd98a); win.position.set(b.position.x + rand(-.5, .5), -1.0 - rand(.3, h-.5), -4.5); worldG.add(win);
+    }
+  }
+  const glowBand = rect(40, 1.6, 0xffb15e, { transparent: true, opacity: .08 }); glowBand.position.set(0, -0.3, -4.6); worldG.add(glowBand);
+})();
+
+/* 几何树（棕矩形树干 + 绿三角树冠） */
+(function(){
+  function tree(x, y, s){
+    const g = new THREE.Group();
+    const t = rect(.34*s, .9*s, 0x5a4030); t.position.y = -.45*s; g.add(t);
+    const c1 = tri(1.4*s, .95*s, 0x1f5c3a); c1.position.y = .15*s; g.add(c1);
+    const c2 = tri(1.0*s, .8*s, 0x2f7a4c); c2.position.y = .85*s; g.add(c2);
+    g.position.set(x, y, -4.2); worldG.add(g);
+  }
+  tree(-9.2, -1.2, 1.25); tree(9.6, -1.0, 1.05); tree(-12.5, -4.5, .95); tree(12.8, -5.2, .85);
+})();
+
+/* 卖火柴的小女孩（2D 火柴人：圆头 + 矩形身体 + 三角裙 + 火柴火焰） */
+const girl = (function(){
+  const g = new THREE.Group();
+  const coat = rect(.62, 1.05, 0xb8452f); coat.position.y = .85; g.add(coat);
+  const skirt = tri(.95, .55, 0x7a2d22); skirt.position.y = .3; g.add(skirt);
+  const head = circ(.34, 0xffd9b3); head.position.y = 1.72; g.add(head);
+  const hair = new THREE.Mesh(new THREE.CircleGeometry(.36, 24, 0, Math.PI), new THREE.MeshBasicMaterial({ color: 0x8a5a2b }));
+  hair.position.y = 1.74; g.add(hair);
+  const face = new THREE.Sprite(new THREE.SpriteMaterial({ map: faceTex('neutral'), transparent: true }));
+  face.scale.set(.95, .83, 1); face.position.set(0, 1.74, .1); g.add(face);
+  // 火柴棒（细线）与火焰（圆）
+  const stick = lineSeg(.2, .5, .9, 1.55, 0xd8a25a, .07); g.add(stick);
+  const tip = circ(.09, 0xffb15e); tip.position.set(.78, 1.52, .05); g.add(tip);
+  const fire = circ(.15, 0xff7a3c, { transparent: true, opacity: .85 }); fire.position.set(.78, 1.52, .06); g.add(fire);
+  const inner = circ(.08, 0xffd98a, { transparent: true, opacity: .9 }); inner.position.set(.78, 1.52, .07); g.add(inner);
+  g.position.set(-4, -2.6, -4.1);
+  worldG.add(g);
+  return { g, fire, inner, dir: 1, moving: true };
+})();
+let girlKey = { up:false, down:false, left:false, right:false };
+
+/* 六游戏入口（发光的几何圆钮 + 名字） */
+const portalNames = ['苹果园','斑马线','公寓楼','靶场','钟楼','方阵'];
+(function(){
+  const spots = [[-9.5, 2.6],[9.5, 2.8],[-13.5, -3.8],[13.5, -4.2],[-2.5, 2.9],[2.5, 3.0]];
+  for (let i = 0; i < 6; i++){
+    const p = new THREE.Group();
+    const glow = circ(.85, 0x8fe8ff, { transparent: true, opacity: .18 }); p.add(glow);
+    const orb = circ(.5, 0x3d4e9e); p.add(orb);
+    const orbHi = circ(.34, 0x8fe8ff); orbHi.position.set(-.06, .08, .02); p.add(orbHi);
+    const dot = circ(.16, 0xffd75e); dot.position.y = .6; p.add(dot);
+    const lab = textSprite(portalNames[i], { size: 52, color: '#9ee6ff', unit: 1.15, bg: 'rgba(10,14,31,.7)', pad: 8 });
+    lab.position.y = -1.05; p.add(lab);
+    p.position.set(spots[i][0], spots[i][1], -4.1);
+    p.userData.portal = i;
+    worldG.add(p);
+  }
+})();
+function maxBest(g){ let m = 0; for (let l = 0; l < 3; l++) m = Math.max(m, (SAVE.best[g][l] || 0)); return m; }
+
+/* 世界更新（2D） */
+function updateWorld(dt, t){
+  const spd = 2.2 * dt;
+  if (girlKey.left){ girl.g.position.x -= spd; girl.g.scale.x = -1; girl.dir = -1; }
+  else if (girlKey.right){ girl.g.position.x += spd; girl.g.scale.x = 1; girl.dir = 1; }
+  else if (girlKey.up){ girl.g.position.y += spd; }
+  else if (girlKey.down){ girl.g.position.y -= spd; }
+  else {
+    const target = Math.sin(t * .22) * 7;
+    girl.g.position.x += (target - girl.g.position.x) * Math.min(1, dt * .6);
+    girl.g.scale.x = Math.cos(t * .22) >= 0 ? 1 : -1;
+  }
+  girl.g.position.x = clamp(girl.g.position.x, -14, 14);
+  girl.g.position.y = clamp(girl.g.position.y, -7.5, -1.2);
+  // 走路起伏 + 火苗闪动
+  girl.g.position.y = clamp(girl.g.position.y, -7.5, -1.2) + Math.sin(t * 8) * .05;
+  girl.fire.scale.setScalar(1 + Math.sin(t * 13) * .18);
+  girl.inner.scale.setScalar(1 + Math.sin(t * 17) * .22);
+  // 星星闪烁 + 云漂移
+  starPts.material.opacity = .75 + Math.sin(t * 1.7) * .2;
+  for (const cl of clouds){ cl.g.position.x += cl.vx * dt; if (cl.g.position.x > 21) cl.g.position.x = -21; }
+}
+
+/* 点击拾取（2D：正交相机射线打在 z≈0 平面上） */
+const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
+renderer.domElement.addEventListener('pointerdown', e => {
+  if (activeName !== 'world') return;
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(worldG.children, true);
+  for (const h of hits){
+    let n = h.object;
+    while (n && n.userData.portal === undefined) n = n.parent;
+    if (n && n.userData.portal !== undefined){ audio(); showIntro(n.userData.portal + 1, 1); return; }
+  }
+});
+
+/* 键盘 */
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'w' || k === 'arrowup') girlKey.up = true;
+  else if (k === 's' || k === 'arrowdown') girlKey.down = true;
+  else if (k === 'a' || k === 'arrowleft') girlKey.left = true;
+  else if (k === 'd' || k === 'arrowright') girlKey.right = true;
+});
+window.addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if (k === 'w' || k === 'arrowup') girlKey.up = false;
+  else if (k === 's' || k === 'arrowdown') girlKey.down = false;
+  else if (k === 'a' || k === 'arrowleft') girlKey.left = false;
+  else if (k === 'd' || k === 'arrowright') girlKey.right = false;
+});
+
+
+/* ---------------- 游戏 1：摘苹果（2D 几何天平） ---------------- */
+function applePos(i){
+  const lower = i < 8;
+  const n = lower ? 8 : 7;
+  const k = lower ? i : i - 8;
+  const a = (k + (lower ? 0 : .5)) * Math.PI * 2 / n;
+  const r = lower ? 1.95 : 1.75;
+  return new THREE.Vector3(-4.2 + Math.cos(a) * r, Math.sin(a) * r * .95, 0);
+}
+
+const appleG = makeGroup('apple');
+const appleGame = {
+  init(){ const g = appleG;
+    // 天空：晨光渐变（几何矩形）
+    const skyC = document.createElement('canvas'); skyC.width = 64; skyC.height = 256;
+    const sk = skyC.getContext('2d');
+    const grad = sk.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, '#7fb8e8'); grad.addColorStop(.55, '#bfe3ff'); grad.addColorStop(.82, '#ffe9c4'); grad.addColorStop(1, '#fff3d8');
+    sk.fillStyle = grad; sk.fillRect(0, 0, 64, 256);
+    const skyTex = new THREE.CanvasTexture(skyC); skyTex.encoding = THREE.sRGBEncoding;
+    const sky = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: skyTex });
+    sky.position.z = -5; g.add(sky);
+    // 太阳（黄色圆）
+    const sun = circ(1.5, 0xffe9a3); sun.position.set(-11.5, 5.6, -4.8); g.add(sun);
+    const sunGlow = circ(2.1, 0xffe9a3, { transparent: true, opacity: .25 }); sunGlow.position.set(-11.5, 5.6, -4.9); g.add(sunGlow);
+    // 草地（绿色矩形）+ 远山（三角形）
+    const ground = rect(40, 9, 0x2f8a4e); ground.position.set(0, -4.5, -4.7); g.add(ground);
+    const ground2 = rect(40, 1.2, 0x256b3c); ground2.position.set(0, -8.4, -4.6); g.add(ground2);
+    for (let i = 0; i < 5; i++){
+      const h = tri(rand(3, 5), rand(2, 3.4), 0x3f7a5a);
+      h.position.set(rand(-18, 18), -3.2, -4.6); g.add(h);
+    }
+    // 草丛（绿色小三角）+ 小花（圆）+ 石头（圆）
+    for (let i = 0; i < 22; i++){
+      let gx, gy, tries = 0;
+      do { gx = rand(-15, 15); gy = rand(-7.8, -3.4); tries++; } while (gx > -8 && gx < 5 && gy > -4.4 && gy < -2.6 && tries < 30);
+      const tuft = tri(rand(.5, .9), rand(.5, .9), i % 2 ? 0x3fae62 : 0x2f8a4c);
+      tuft.position.set(gx, gy, -4.4); g.add(tuft);
+    }
+    for (let i = 0; i < 8; i++){
+      const f = new THREE.Group();
+      const petal = circ(.18, [0xfff2a8, 0xffc9d8, 0xdfe6ff][i % 3]); f.add(petal);
+      const core = circ(.07, 0xffd75e); core.position.z = .02; f.add(core);
+      let fx, fy, tries = 0;
+      do { fx = rand(-15, 15); fy = rand(-7.5, -3.5); tries++; } while (fx > -8 && fx < 5 && fy > -4.4 && fy < -2.6 && tries < 30);
+      f.position.set(fx, fy, -4.3); g.add(f);
+    }
+    for (let i = 0; i < 5; i++){
+      const rk = circ(rand(.2, .42), 0x6b7280);
+      rk.position.set(rand(-15, 15), rand(-8, -3.6), -4.3);
+      rk.scale.y = .6; g.add(rk);
+    }
+    // 远处装饰树（棕矩形 + 绿三角，不结果）
+    const decoPts = [[-13.5, -3.1],[-13.2, -6.5],[12.5, -3.2],[13.2, -6.8]];
+    for (const p of decoPts){
+      const dt = new THREE.Group();
+      const dtr = rect(.3, 1.0, 0x6b4a30); dtr.position.y = -.5; dt.add(dtr);
+      const c1 = tri(1.2, .9, 0x2f8a4c); c1.position.y = .2; dt.add(c1);
+      const c2 = tri(.8, .7, 0x37a35a); c2.position.y = .9; dt.add(c2);
+      dt.position.set(p[0], p[1], -4.4); g.add(dt);
+    }
+    // 主角苹果树（矩形树干 + 两层三角树冠）
+    const tree = new THREE.Group();
+    const trunk = rect(.55, 2.6, 0x6b4a30); trunk.position.y = -1.5; tree.add(trunk);
+    const branch = lineSeg(-.1, -.6, .7, -.15, 0x6b4a30, .1); tree.add(branch);
+    const c1 = tri(2.6, 1.9, 0x2f8a4c); c1.position.y = .15; tree.add(c1);
+    const c2 = tri(1.7, 1.5, 0x37a35a); c2.position.y = 1.15; tree.add(c2);
+    const c3 = tri(1.1, 1.1, 0x3fae62); c3.position.y = 2.0; tree.add(c3);
+    tree.position.set(-4.2, -2.7, -4.5); g.add(tree);
+    // 15 个苹果（红色几何圆，树冠外侧上下两层环）
+    this.apples = [];
+    for (let i = 0; i < 15; i++){
+      const m = circ(.3, 0xe0442e);
+      m.scale.y = .92;
+      m.position.copy(applePos(i));
+      m.position.z = -4.3;
+      m.userData.idx = i;
+      g.add(m); this.apples.push(m);
+    }
+    // 天平称：立柱矩形 + 横梁（绕中心转）+ 托盘 + 金色砝码（数字＝需要数）
+    const scale = new THREE.Group(); scale.position.set(2.2, -2.7, -4.2);
+    const base = rect(1.5, .3, 0x8a6a3c); base.position.y = .12; scale.add(base);
+    const post = rect(.34, 3.0, 0x8a6a3c); post.position.y = 1.75; scale.add(post);
+    const top = circ(.26, 0xffc94d); top.position.y = 3.32; scale.add(top);
+    // 横梁
+    const beam = new THREE.Group(); beam.position.set(0, 3.0, 0);
+    const bar = rect(3.5, .16, 0xd8dbe4); beam.add(bar);
+    const pivot = rect(.34, .34, 0xffc94d); beam.add(pivot);
+    scale.add(beam);
+    this.beam = beam; this.tiltT = 0; this.bounceT = undefined;
+    // 链条（细线，随托盘上下）
+    this.chainL = lineSeg(0, 0, 0, -.95, 0xb9bec9, .05); this.chainL.visible = false;
+    this.chainR = lineSeg(0, 0, 0, -.95, 0xb9bec9, .05); this.chainR.visible = false;
+    scale.add(this.chainL); scale.add(this.chainR);
+    // 左右托盘（梯形，永远水平，只上下移动）
+    function makePan(){
+      const p = new THREE.Group();
+      const s = new THREE.Shape();
+      s.moveTo(-.75, 0); s.lineTo(.75, 0); s.lineTo(.5, -.3); s.lineTo(-.5, -.3); s.closePath();
+      const bowl = geo(new THREE.ShapeGeometry(s), 0xc98a3e);
+      p.add(bowl);
+      scale.add(p);
+      return p;
+    }
+    this.panL = makePan(); this.panR = makePan();
+    // 砝码（金色圆角矩形 + 数字＝需要数）
+    const weight = new THREE.Group();
+    const wBody = rect(.72, .55, 0xffc94d); wBody.position.y = .22; weight.add(wBody);
+    const wHandle = rect(.3, .18, 0xffc94d); wHandle.position.y = .55; weight.add(wHandle);
+    this.weightNum = textSprite('0', { size: 88, color: '#6b3d00', unit: .5, pad: 0 });
+    this.weightNum.position.set(0, .2, .05); weight.add(this.weightNum);
+    weight.position.set(0, .05, .02); this.panR.add(weight);
+    this.panC = new THREE.Vector3(2.2, .05, -4.2);
+    // 天平状态词
+    this.balanceWord = textSprite('', { size: 60, color: '#9ee6ff', unit: 1.5, bg: 'rgba(10,14,31,.7)', pad: 10 });
+    this.balanceWord.position.set(0, 4.15, .05); scale.add(this.balanceWord);
+    g.add(scale);
+    // 萤火虫（2D 漂浮圆点）
+    const fgN = 26;
+    const fgPos = new Float32Array(fgN * 3);
+    for (let i = 0; i < fgN; i++){ fgPos[i*3] = rand(-14, 14); fgPos[i*3+1] = rand(-1, 5); fgPos[i*3+2] = -4.1; }
+    const fgGeo = new THREE.BufferGeometry();
+    fgGeo.setAttribute('position', new THREE.BufferAttribute(fgPos, 3));
+    this.fireflies = {
+      geo: fgGeo,
+      base: fgPos.slice(),
+      mat: new THREE.PointsMaterial({ color: 0xffe9a3, size: 3.4, transparent: true, opacity: .85, sizeAttenuation: false, depthWrite: false })
+    };
+    g.add(new THREE.Points(fgGeo, this.fireflies.mat));
+    this.appleG = g;
+  },
+  start(level, afterEnd){
+    this.afterEnd = afterEnd;
+    this.level = level;
+    this.N = level === 1 ? randi(1,5) : randi(1,9);
+    this.X = 0; this.retries = 0; this.locked = false; this.won = false;
+    this.pickStep = level === 1 ? 1 : (level === 2 ? 2 : 3);
+    this.onTree = this.apples.slice();
+    this.panSlots = [];
+    this.apples.forEach((a, i) => {
+      a.userData.home = applePos(i); a.userData.slot = -1;
+      a.visible = true; a.position.copy(a.userData.home);
+      this.appleG.add(a);
+    });
+    this.weightNum.material.map = textSprite(String(this.N), { size: 88, color: '#6b3d00', unit: .5, pad: 0 }).material.map;
+    this.weightNum.material.needsUpdate = true;
+    this.tiltT = clamp((this.X - this.N) * .18, -.4, .4);
+    this.bounceT = undefined;
+    this.updateStatus();
+    this.drag = new THREE.DragControls(this.apples, camera, renderer.domElement);
+    const self = this;
+    this.drag.addEventListener('dragstart', ev => {
+      const a = ev.object;
+      if (self.locked) return;
+      if (a.parent !== self.appleG){
+        const w = a.getWorldPosition(new THREE.Vector3());
+        self.appleG.add(a); a.position.copy(w);
+      }
+      Sfx.pick();
+    });
+    this.drag.addEventListener('dragend', ev => {
+      const a = ev.object;
+      if (self.locked) return;
+      if (self.onTree.includes(a)){
+        const dx = a.position.x - self.panC.x, dy = a.position.y - self.panC.y;
+        if (Math.hypot(dx, dy) < 1.5){
+          Sfx.drop(); self.addToPan(a);
+        } else {
+          tween(a.position, a.userData.home, .25, easeOut);
+        }
+      } else {
+        self.panL.add(a);
+        a.position.copy(self.panSlotPos(a.userData.slot));
+      }
+    });
+    this.dragEnabled = true;
+    this.buildUI();
+  },
+  panSlotPos(slot){
+    const c = slot % 3 - 1, zz = Math.floor(slot / 3);
+    return new THREE.Vector3(c * .2, -.05 + zz * .26, 0);
+  },
+  dropIntoPan(a){
+    const slot = this.panSlots.length;
+    this.panSlots.push(a); a.userData.slot = slot;
+    const tgt = this.panSlotPos(slot);
+    const w = a.getWorldPosition(new THREE.Vector3());
+    this.panL.add(a);
+    a.position.copy(this.panL.worldToLocal(w));
+    const self = this;
+    tween(a.position, tgt, .24, easeInOut, () => { a.position.copy(tgt); self.updateStatus(); });
+  },
+  addToPan(a){
+    this.onTree = this.onTree.filter(x => x !== a);
+    this.dropIntoPan(a);
+    this.X++;
+    this.updateStatus();
+  },
+  pickGroup(n){
+    if (this.locked) return;
+    let taken = 0;
+    for (const a of this.onTree.slice()){
+      if (taken >= n) break;
+      this.addToPan(a);
+      taken++;
+    }
+    if (taken > 0) Sfx.drop();
+  },
+  updateStatus(){
+    const st = $('statusLine');
+    const x = this.X, n = this.N;
+    this.tiltT = clamp((x - n) * .18, -.4, .4);
+    let word, color;
+    if (x < n){ word = '苹果轻，再放几个'; color = '#ffd75e'; }
+    else if (x > n){ word = '苹果太重了！'; color = '#ff8a7a'; }
+    else { word = '平衡啦！'; color = '#8fe8b0'; }
+    st.innerHTML = '左边托盘 <b style="color:#fff">' + x + '</b> 个苹果 · 砝码 <b style="color:#ffd75e">' + n + '</b> — <b style="color:' + color + '">' + word + '</b>';
+    this.balanceWord.material.map = textSprite(word, { size: 60, color: color, unit: 1.5, bg: 'rgba(10,14,31,.7)', pad: 10 }).material.map;
+    this.balanceWord.material.needsUpdate = true;
+    if (x === n && !this.won){ this.won = true; setTimeout(() => this.celebrate(), 450); }
+    if (x > n && !this.locked){ this.locked = true; this.retries++; Sfx.fail(); toast('太重了！苹果比砝码重，重新开始'); setTimeout(() => this.restartPick(), 1300); }
+  },
+  restartPick(){
+    for (const a of this.apples){
+      this.appleG.add(a);
+      a.visible = true;
+      a.position.copy(a.userData.home);
+    }
+    this.panSlots = [];
+    this.X = 0; this.locked = false; this.won = false;
+    this.tiltT = clamp((0 - this.N) * .18, -.4, .4);
+    this.updateStatus();
+  },
+  celebrate(){
+    this.locked = true; Sfx.win();
+    this.tiltT = 0; this.bounceT = 0;
+    toast('平衡啦！' + this.N + ' 个苹果和砝码一样重，全对！');
+    setTimeout(() => this.finishWin(), 1600);
+  },
+  finishWin(){
+    this.locked = true;
+    const stars = this.retries === 0 ? 3 : (this.retries <= 1 ? 2 : 1);
+    const coins = 10 + (stars - 1) * 5;
+    SAVE.coins += coins; SAVE.stars += stars;
+    if (!SAVE.best[0] || (SAVE.best[0][this.level-1] || 0) < stars){ (SAVE.best[0] = SAVE.best[0] || []); SAVE.best[0][this.level-1] = stars; }
+    persist(); refreshHud();
+    showRating('摘苹果', stars, coins, this.afterEnd);
+  },
+  buildUI(){
+    clearUI();
+    if (this.pickStep > 1){
+      for (let i = 1; i <= this.pickStep; i++){
+        uiBtn('摘 ' + i + ' 个', () => this.pickGroup(i), 'gold');
+      }
+      uiMsg('点按钮一次摘几个苹果，放到左边托盘，让天平平衡');
+    } else {
+      uiMsg('拖动树上的苹果到左边托盘，直到天平平衡（两边一样高）');
+    }
+  },
+  update(dt, t){
+    if (!this.fireflies) return;
+    const p = this.fireflies.geo.attributes.position.array;
+    for (let i = 0; i < this.fireflies.base.length; i += 3){
+      p[i]   = this.fireflies.base[i]   + Math.sin(t * .55 + i) * .7;
+      p[i+1] = this.fireflies.base[i+1] + Math.sin(t * .85 + i * 1.7) * .4;
+    }
+    this.fireflies.geo.attributes.position.needsUpdate = true;
+    this.fireflies.mat.opacity = .55 + Math.sin(t * 2.2) * .25;
+    // 天平：横梁倾斜 + 托盘高低（轻的一头翘起来）
+    this.beam.rotation.z += (this.tiltT - this.beam.rotation.z) * Math.min(1, dt * 4.5);
+    if (this.bounceT !== undefined){
+      this.bounceT += dt;
+      if (this.bounceT < 1.5){
+        const k = Math.max(0, 1 - this.bounceT / 1.5);
+        this.beam.rotation.z += Math.sin(this.bounceT * 11) * .06 * k;
+      }
+    }
+    const th = this.beam.rotation.z, cosT = Math.cos(th), sinT = Math.sin(th);
+    const arm = 1.75, px = 0, py = 3.0, panY = 2.05;
+    this.panL.position.set(px - arm*cosT, py - arm*sinT, 0);
+    this.panR.position.set(px + arm*cosT, py + arm*sinT, 0);
+    this.chainL.position.set(px - arm*cosT, (py - arm*sinT) + .95, 0);
+    this.chainR.position.set(px + arm*cosT, (py + arm*sinT) + .95, 0);
+  },
+  end(){ if (this.drag && this.drag.dispose) this.drag.dispose(); clearUI(); $('statusLine').innerHTML = ''; }
+};
+
+
+/* ---------------- 游戏 2：扶老奶奶过马路（2D 几何） ---------------- */
+const crossG = makeGroup('cross');
+const crossGame = {
+  init(){ const g = crossG;
+    // 夜空街道背景（渐变 + 几何剪影）
+    const skyC = document.createElement('canvas'); skyC.width = 64; skyC.height = 256;
+    const sk = skyC.getContext('2d');
+    const grad = sk.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, '#0b1030'); grad.addColorStop(1, '#1a2244');
+    sk.fillStyle = grad; sk.fillRect(0, 0, 64, 256);
+    const skyTex = new THREE.CanvasTexture(skyC); skyTex.encoding = THREE.sRGBEncoding;
+    const sky = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: skyTex });
+    sky.position.z = -5; g.add(sky);
+    // 路面（灰色矩形）+ 斑马线（白色竖条矩形）
+    const road = rect(40, 4.2, 0x232a44); road.position.set(0, -4.6, -4.5); g.add(road);
+    const zebra = rect(40, 2.6, 0x39415c); zebra.position.set(0, -4.6, -4.4); g.add(zebra);
+    for (let i = 0; i < 7; i++){
+      const m = rect(.34, 1.5, 0xdfe6ff); m.position.set(-3 + i * .95, -4.6, -4.3); g.add(m);
+    }
+    // 数轴 0-9（直线 + 刻度 + 数字）
+    lineSeg(-4.5, -2.6, 4.5, -2.6, 0x8fe8ff, .07).position.z = -4.2;
+    for (let i = 0; i <= 9; i++){
+      const x = -4.5 + i;
+      const mark = rect(.12, .5, 0x8fe8ff); mark.position.set(x, -2.95, -4.2); g.add(mark);
+      const num = textSprite(String(i), { size: 56, color: '#9ee6ff', unit: .72, pad: 0 });
+      num.position.set(x, -1.9, -4.2); g.add(num);
+    }
+    // 红绿灯（杆矩形 + 绿灯/红灯圆）
+    const pole = rect(.16, 3.0, 0x666b7a); pole.position.set(5.4, -.4, -4.3); g.add(pole);
+    const lampBox = rect(.7, 1.6, 0x2b2f3d); lampBox.position.set(5.4, .9, -4.2); g.add(lampBox);
+    this.greenLamp = circ(.26, 0x2f8a4c); this.greenLamp.position.set(5.4, 1.45, -4.1); g.add(this.greenLamp);
+    this.redLamp = circ(.26, 0x4a2f2c); this.redLamp.position.set(5.4, .45, -4.1); g.add(this.redLamp);
+    // 老奶奶（2D 火柴人：圆头 + 矩形身体 + 三角裙 + 拐杖线）
+    const gm = new THREE.Group();
+    const body = rect(.52, 1.0, 0x8a5a8a); body.position.y = .7; gm.add(body);
+    const skirt = tri(.8, .5, 0x6a3a6a); skirt.position.y = .15; gm.add(skirt);
+    const head = circ(.28, 0xffe0c0); head.position.y = 1.5; gm.add(head);
+    const scarf = tri(.55, .4, 0xd94a4a); scarf.position.y = 1.72; gm.add(scarf);
+    const cane = lineSeg(.35, .15, .75, .9, 0x8a6a3a, .06); gm.add(cane);
+    gm.position.set(-4.5, -2.6, -4.3); g.add(gm);
+    this.grandma = gm;
+    // 汽车（矩形车身 + 矩形驾驶舱 + 圆轮）
+    const car = new THREE.Group();
+    const cBody = rect(2.4, .8, 0xe07840); cBody.position.y = .35; car.add(cBody);
+    const cab = rect(1.2, .55, 0xfff2d0); cab.position.set(-.3, .95, 0); car.add(cab);
+    for (const sx of [-.7, .7]){
+      const w = circ(.3, 0x22242e); w.position.set(sx, .15, .05); car.add(w);
+    }
+    car.position.set(14, -4.6, -4.3); g.add(car);
+    this.car = car;
+    this.crossG = g;
+  },
+  start(level, afterEnd){
+    this.afterEnd = afterEnd; this.level = level;
+    const cfg = [[5,7,[1,2]],[9,9,[1,2,5]],[12,12,[1,2,5]]][level-1];
+    this.dist = cfg[0]; this.greenMax = cfg[1]; this.buttons = cfg[2];
+    this.green = this.greenMax; this.pos = 0; this.presses = 0; this.locked = false; this.won = false;
+    this.spacing = 9 / this.dist;
+    this.grandma.position.set(-4.5, -2.6, -4.3);
+    this.grandma.rotation.z = 0; this.grandma.scale.set(1,1,1);
+    this.car.position.set(14, -4.6, -4.3);
+    this.redLamp.material.color.setHex(0x4a2f2c); this.greenLamp.material.color.setHex(0x2f8a4c);
+    this.updateUI();
+    this.buildUI();
+  },
+  updateUI(){
+    const st = $('statusLine');
+    const remain = this.green >= 0 ? this.green : 0;
+    st.innerHTML = '老奶奶在 <b style="color:#fff">' + this.pos + '</b> / ' + this.dist + ' · 绿灯 <b style="color:#8fe8b0">' + remain + ' 秒</b>';
+    $('formula').textContent = '';
+    this.greenLamp.material.color.setHex(this.green > 0 ? 0x3fae62 : 0x2f3a2c);
+    this.redLamp.material.color.setHex(this.green > 0 ? 0x4a2f2c : 0xff4a3d);
+  },
+  press(v){
+    if (this.locked) return;
+    const from = this.pos;
+    const to = Math.min(this.dist, this.pos + v);
+    this.pos = to; this.presses++; this.green--;
+    Sfx.tick();
+    const sx = -4.5 + to * this.spacing;
+    tween(this.grandma.position, { x: sx }, .3, easeOut, () => {
+      this.grandma.rotation.z = Math.sin(performance.now()/80) * .06;
+    });
+    $('formula').textContent = '走了 ' + v + ' 步 → 现在 ' + to + ' · 绿灯 −1';
+    if (to === this.dist){ this.locked = true; setTimeout(() => this.win(), 450); }
+    else if (this.green <= 0){ this.locked = true; setTimeout(() => this.fail(), 450); }
+    this.updateUI();
+  },
+  win(){
+    Sfx.win();
+    tween(this.grandma.rotation, { z: 0 }, .2, easeOut);
+    const min = minPresses(this.dist, this.buttons);
+    const stars = this.presses === min ? 3 : (this.greenMax - this.presses >= Math.ceil(this.greenMax/2) ? 2 : 1);
+    const coins = 10 + (stars - 1) * 5;
+    SAVE.coins += coins; SAVE.stars += stars;
+    if ((SAVE.best[1][this.level-1] || 0) < stars) SAVE.best[1][this.level-1] = stars;
+    persist(); refreshHud();
+    showRating('扶老奶奶过马路', stars, coins, this.afterEnd);
+  },
+  fail(){
+    Sfx.boom();
+    this.redLamp.material.color.setHex(0xff4a3d); this.greenLamp.material.color.setHex(0x2f3a2c);
+    toast('红灯！汽车来了…老奶奶被风吹回起点');
+    tween(this.car.position, { x: 1 }, .8, easeInOut, () => {
+      Sfx.fail();
+      this.car.position.x = 14;
+      tween(this.grandma.scale, { x: 0.1, y: .1, z: .1 }, .35, easeOut, () => {
+        this.grandma.scale.set(1,1,1); this.grandma.position.set(-4.5,-2.6,-4.3);
+        this.pos = 0; this.green = this.greenMax; this.locked = false;
+        this.updateUI();
+      });
+    });
+  },
+  buildUI(){
+    clearUI();
+    for (const v of this.buttons) uiBtn('+' + v, () => this.press(v), 'green');
+    uiMsg('每按一次：老奶奶前进，绿灯 −1 秒');
+  },
+  end(){ clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; }
+};
+
+/* ---------------- 游戏 3：帮小男孩爬楼梯（2D 几何） ---------------- */
+const stairG = makeGroup('stair');
+const stairGame = {
+  init(){ const g = stairG;
+    // 夜景背景（几何矩形）+ 楼体
+    const skyC = document.createElement('canvas'); skyC.width = 64; skyC.height = 256;
+    const sk = skyC.getContext('2d');
+    const grad = sk.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, '#0d1228'); grad.addColorStop(1, '#182038');
+    sk.fillStyle = grad; sk.fillRect(0, 0, 64, 256);
+    const skyTex = new THREE.CanvasTexture(skyC); skyTex.encoding = THREE.sRGBEncoding;
+    const sky = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: skyTex });
+    sky.position.z = -5; g.add(sky);
+    // 地面
+    const ground = rect(40, 3.2, 0x141b33); ground.position.set(0, -7.4, -4.5); g.add(ground);
+    // 9 层公寓楼（大矩形 + 楼层线 + 窗户小矩形 + 数字）
+    const wall = rect(5.2, 13.4, 0x2b3560); wall.position.set(0, -.6, -4.4); g.add(wall);
+    for (let i = 0; i < 9; i++){
+      const y = -7.2 + i * 1.6;
+      const floorLine = rect(5.6, .12, 0x3d4e6e); floorLine.position.set(0, y, -4.3); g.add(floorLine);
+      for (let w = -1; w <= 1; w++){
+        const win = rect(.7, .5, 0xffd98a); win.position.set(w * 1.3, y + .75, -4.3); g.add(win);
+      }
+      const num = textSprite(String(i + 1), { size: 64, color: '#9ee6ff', unit: .9, pad: 0 });
+      num.position.set(3.6, y + .55, -4.3); g.add(num);
+    }
+    // 小男孩（2D 火柴人：圆头 + 矩形身体 + 圆眼睛表情）
+    const boy = new THREE.Group();
+    const body = rect(.55, 1.0, 0x3f9bd9); body.position.y = .65; boy.add(body);
+    const head = circ(.28, 0xffe0c0); head.position.y = 1.45; boy.add(head);
+    const diaper = tri(.5, .3, 0xffffff); diaper.position.y = .15; boy.add(diaper);
+    this.boyFace = new THREE.Sprite(new THREE.SpriteMaterial({ map: faceTex('happy'), transparent: true }));
+    this.boyFace.scale.set(.85, .74, 1); this.boyFace.position.set(0, 1.48, .1); boy.add(this.boyFace);
+    boy.position.set(0, -7.2, -4.2); g.add(boy);
+    this.boy = boy;
+    this.stairG = g;
+  },
+  start(level, afterEnd){
+    this.afterEnd = afterEnd; this.level = level;
+    this.errors = 0; this.locked = false; this.nVal = undefined;
+    this.phase = 0;
+    if (level === 3){
+      this.F = randi(1, 3); this.a = randi(5, 9); this.mid = this.F + this.a;
+      do { this.b = randi(1, 9); this.T = this.mid - this.b; } while (this.T < 1 || this.T > 9);
+      this.phase = 1;
+      this.showEq('F + a = ?', '第 1 步：填 a，让男孩从 ' + this.F + ' 层上升');
+    } else {
+      this.F = randi(1, level === 1 ? 4 : 8);
+      if (level === 1){
+        this.sign = '+'; this.T = randi(this.F + 1, Math.min(5, this.F + 3));
+      } else {
+        this.sign = Math.random() < .5 ? '+' : '-';
+        if (this.sign === '+'){
+          this.T = randi(this.F + 1, Math.min(9, this.F + 9));
+        } else if (this.F >= 2){
+          this.T = randi(1, this.F - 1);
+        } else {
+          this.sign = '+'; this.T = randi(this.F + 1, Math.min(9, this.F + 9));
+        }
+      }
+      this.n = this.sign === '+' ? this.T - this.F : this.F - this.T;
+      this.showEq('F ○ n = T', '男孩在 ' + this.F + ' 层，要到 ' + this.T + ' 层');
+    }
+    this.boy.position.set(0, -7.2 + (this.F - 1) * 1.6, -4.2);
+    this.setFace('happy');
+    this.updateInfo();
+    this.buildUI();
+  },
+  showEq(tpl, hint){
+    this.tpl = tpl; this.hintBase = hint;
+  },
+  updateInfo(){
+    const st = $('statusLine');
+    const nv = (this.nVal !== undefined && this.nVal !== null) ? this.nVal : '?';
+    if (this.phase === 1){
+      st.innerHTML = '第 1 步：<b style="color:#fff">' + this.F + ' ＋ <span id="nv">' + nv + '</span> ＝ ' + this.mid + '</b>';
+    } else if (this.phase === 2){
+      st.innerHTML = '第 2 步：<b style="color:#fff">' + this.mid + ' − <span id="nv">' + nv + '</span> ＝ ' + this.T + '</b>';
+    } else {
+      const op = this.sign === '+' ? '＋' : '−';
+      st.innerHTML = '男孩在 <b style="color:#9ee6ff">' + this.F + '</b> 层 · 要到 <b style="color:#ffd75e">' + this.T + '</b> 层：<b>' + this.F + ' ' + op + ' <span id="nv">' + nv + '</span> ＝ ' + this.T + '</b>';
+    }
+  },
+  setFace(mood){ this.boyFace.material.map = faceTex(mood); this.boyFace.material.needsUpdate = true; },
+  setSign(s){ this.sign = s; this.updateInfo(); },
+  setN(n){ this.nVal = n; const el = $('nv'); if (el) el.textContent = n; },
+  go(){
+    const n = this.nVal;
+    if (n === undefined || n === null || n === '' ){ toast('请先输入数字'); return; }
+    if (this.locked) return;
+    if (this.phase === 1){
+      if (this.F + n !== this.mid){ this.wrong(); return; }
+      this.locked = true; Sfx.whoosh();
+      tween(this.boy.position, { y: -7.2 + (this.mid - 1) * 1.6 }, .8, easeInOut, () => {
+        this.phase = 2; this.locked = false; this.nVal = undefined;
+        this.updateInfo(); this.buildUI();
+      });
+    } else if (this.phase === 2){
+      if (this.mid - n !== this.T){ this.wrong(); return; }
+      this.locked = true; Sfx.whoosh();
+      tween(this.boy.position, { y: -7.2 + (this.T - 1) * 1.6 }, .8, easeInOut, () => this.win());
+    } else {
+      const ok = this.sign === '+' ? (this.F + n === this.T) : (this.F - n === this.T);
+      if (!ok){ this.wrong(); return; }
+      this.locked = true; Sfx.whoosh();
+      tween(this.boy.position, { y: -7.2 + (this.T - 1) * 1.6 }, .8, easeInOut, () => this.win());
+    }
+  },
+  wrong(){
+    this.errors++; Sfx.cry(); this.setFace('cry');
+    tween(this.boy.scale, { x: 1.15, y: .9, z: 1.15 }, .12, null, () => tween(this.boy.scale, { x: 1, y: 1, z: 1 }, .18, easeOut, () => this.setFace('happy')));
+    if (this.errors >= 2){
+      let hint;
+      if (this.phase === 1) hint = '提示：a ＝ ' + (this.mid - this.F);
+      else if (this.phase === 2) hint = '提示：b ＝ ' + (this.mid - this.T);
+      else hint = this.sign === '+' ? ('提示：n ＝ T − F ＝ ' + (this.T - this.F)) : ('提示：n ＝ F − T ＝ ' + (this.F - this.T));
+      toast(hint);
+    }
+    this.updateInfo();
+  },
+  win(){
+    Sfx.laugh(); this.setFace('happy');
+    const stars = this.errors === 0 ? 3 : (this.errors <= 1 ? 2 : 1);
+    const coins = 10 + (stars - 1) * 5;
+    SAVE.coins += coins; SAVE.stars += stars;
+    if ((SAVE.best[2][this.level-1] || 0) < stars) SAVE.best[2][this.level-1] = stars;
+    persist(); refreshHud();
+    showRating('帮小男孩爬楼梯', stars, coins, this.afterEnd);
+  },
+  buildUI(){
+    clearUI();
+    const row = document.createElement('div'); row.style.display = 'contents'; $('gameUI').appendChild(row);
+    if (this.phase === 1 || (this.phase === 0 && this.level >= 2)){
+      const plus = uiBtn('＋ 加', () => { this.setSign('+'); }, 'green small');
+      const minus = uiBtn('− 减', () => { this.setSign('-'); }, 'red small');
+    }
+    for (let i = 0; i <= 9; i++) uiBtn(String(i), () => this.setN(i), 'tiny');
+    uiBtn('清空', () => { this.nVal = undefined; const el = $('nv'); if (el) el.textContent = '?'; }, 'small');
+    uiBtn('出发', () => this.go(), 'gold');
+  },
+  end(){ clearUI(); $('statusLine').innerHTML = ''; }
+};
+
+
+/* ---------------- 游戏 4：打靶（2D 几何） ---------------- */
+const shootG = makeGroup('shoot');
+const shootGame = {
+  init(){ const g = shootG;
+    // 靶场夜景背景
+    const skyC = document.createElement('canvas'); skyC.width = 64; skyC.height = 256;
+    const sk = skyC.getContext('2d');
+    const grad = sk.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, '#0d1228'); grad.addColorStop(1, '#182038');
+    sk.fillStyle = grad; sk.fillRect(0, 0, 64, 256);
+    const skyTex = new THREE.CanvasTexture(skyC); skyTex.encoding = THREE.sRGBEncoding;
+    const sky = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: skyTex });
+    sky.position.z = -5; g.add(sky);
+    const ground = rect(40, 2.8, 0x141b33); ground.position.set(0, -7.6, -4.5); g.add(ground);
+    // 靶（0 环=靶心，同心几何圆环）
+    this.target = new THREE.Group();
+    const palette = [0xffd75e,0xffb15e,0xff8a5a,0xff5a4d,0xd94a8a,0x8a5ad9,0x5b6fc0,0x3f9bd9,0x4fae6d,0x6b7280];
+    for (let r = 0; r < 10; r++){
+      const ringM = ring(r*.34, (r+1)*.34, palette[r], { side: THREE.DoubleSide });
+      ringM.position.z = .02; this.target.add(ringM);
+      const num = textSprite(String(r), { size: 40, color: '#ffffff', unit: .26, pad: 0 });
+      const mid = (r + .5) * .34;
+      num.position.set(mid * Math.cos(-.6), mid * Math.sin(-.6), .05); this.target.add(num);
+    }
+    this.target.position.set(5.5, 2.5, -4.3); g.add(this.target);
+    // 靶架（矩形横杆 + 两条腿）
+    const stand = rect(3.0, .14, 0x8a6a3a); stand.position.set(5.5, .9, -4.3); g.add(stand);
+    const leg1 = lineSeg(4.2, .9, 4.4, -1.6, 0x8a6a3a, .12); g.add(leg1);
+    const leg2 = lineSeg(6.8, .9, 6.6, -1.6, 0x8a6a3a, .12); g.add(leg2);
+    // 弓（几何圆弧环 + 弦线）
+    const bow = new THREE.Group();
+    const arc = ring(.55, .7, 0x8a5a2b, { side: THREE.DoubleSide });
+    arc.rotation.z = Math.PI/2; bow.add(arc);
+    const str = lineSeg(0, -.7, 0, .7, 0xcccccc, .04); bow.add(str);
+    bow.position.set(-4.5, 2.5, -4.2); g.add(bow);
+    // 箭（矩形箭杆 + 三角箭头 + 羽尾）
+    const arrow = new THREE.Group();
+    const shaft = rect(1.3, .07, 0xc8a87a); arrow.add(shaft);
+    const tip = tri(.3, .24, 0xdfe6ff); tip.rotation.z = -Math.PI/2; tip.position.set(.78, 0, .02); arrow.add(tip);
+    const tail = tri(.22, .3, 0xff5a4d); tail.rotation.z = Math.PI/2; tail.position.set(-.62, 0, .02); arrow.add(tail);
+    arrow.position.set(-4.2, 2.5, -4.1); g.add(arrow);
+    this.arrow = arrow;
+    this.shootG = g;
+  },
+  start(level, afterEnd){
+    this.afterEnd = afterEnd; this.level = level;
+    const Dmax = [3,5,8][level-1], Amax = [2,5,5][level-1];
+    this.round = 1; this.total = 0; this.locked = false;
+    this.newRound(Dmax, Amax);
+    this.buildUI();
+  },
+  newRound(Dmax, Amax){
+    this.D = randi(1, Dmax); this.A = randi(0, Amax);
+    this.F = 0;
+    this.arrow.visible = true; this.arrow.position.set(-4.2, 2.5, -4.1);
+    this.arrow.rotation.z = 0;
+    const st = $('statusLine');
+    st.innerHTML = '第 ' + this.round + ' / 3 轮 · 距离 <b style="color:#9ee6ff">' + this.D + '</b> · 角度 <b style="color:#9ee6ff">' + this.A + '</b> · 力度 <b style="color:#ffd75e" id="fv">' + this.F + '</b>';
+    $('formula').textContent = '目标：力度 ＝ 距离 ＋ 角度 ＝ ' + (this.D + this.A) + '（0 环）';
+    const slider = $('forceSlider');
+    if (slider){ slider.value = 0; slider.max = 20; }
+  },
+  shoot(){
+    if (this.locked) return;
+    this.locked = true; Sfx.whoosh();
+    const E = this.F - this.D - this.A;
+    const targetX = 5.5, startX = -4.2;
+    let endPos, isHit = false, ring = 0;
+    if (this.F < this.D || E < 0){ endPos = { x: (startX + targetX)/2, y: 2.5, z: -4.1 }; isHit = false; }
+    else if (E > 9){ endPos = { x: 11.5, y: 5.4, z: -4.1 }; isHit = false; }
+    else { ring = E; isHit = true; endPos = { x: targetX + (E + .5) * .34, y: 2.5, z: -4.1 }; }
+    const from = { x: this.arrow.position.x, y: this.arrow.position.y, z: this.arrow.position.z };
+    const t0 = performance.now(), dur = 900;
+    const self = this;
+    function step(now){
+      let t = clamp((now - t0)/dur, 0, 1);
+      const yy = easeOut(t);
+      self.arrow.position.set(
+        from.x + (endPos.x - from.x) * yy,
+        from.y + (endPos.y - from.y) * yy + Math.sin(t*Math.PI) * .35,
+        from.z + (endPos.z - from.z) * yy
+      );
+      self.arrow.rotation.z = Math.atan2(endPos.y - from.y, endPos.x - from.x) * Math.min(1, t * 3);
+      if (t < 1) requestAnimationFrame(step);
+      else {
+        self.arrow.visible = isHit || E <= 9;
+        self.resolve(isHit, ring, E);
+      }
+    }
+    requestAnimationFrame(step);
+  },
+  resolve(isHit, ring, E){
+    const st = $('statusLine');
+    if (!isHit){
+      st.innerHTML = '脱靶！0 分（力度 ' + this.F + '，有效值 ' + E + '）';
+      Sfx.fail();
+    } else {
+      const score = 10 - ring;
+      this.total += score;
+      Sfx.coin();
+      st.innerHTML = '命中 <b style="color:#ffd75e">' + ring + ' 环</b> ＋' + score + ' 分 · 本轮累计 <b>' + this.total + '</b>';
+    }
+    $('formula').textContent = '有效值 ＝ 力度 − 距离 − 角度 ＝ ' + this.F + ' − ' + this.D + ' − ' + this.A + ' ＝ ' + E;
+    setTimeout(() => {
+      if (this.round >= 3) this.finish();
+      else { this.round++; this.newRound([3,5,8][this.level-1], [2,5,5][this.level-1]); this.locked = false; }
+    }, 1600);
+  },
+  finish(){
+    const stars = this.total >= 25 ? 3 : (this.total >= 18 ? 2 : 1);
+    const coins = 10 + (stars - 1) * 5;
+    SAVE.coins += coins; SAVE.stars += stars;
+    if ((SAVE.best[3][this.level-1] || 0) < stars) SAVE.best[3][this.level-1] = stars;
+    persist(); refreshHud();
+    showRating('打靶', stars, coins, this.afterEnd, '总积分 ' + this.total + ' / 30');
+  },
+  buildUI(){
+    clearUI();
+    const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;align-items:center;gap:8px;background:rgba(10,14,31,.78);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:8px 14px';
+    const lab = document.createElement('span'); lab.style.cssText = 'font-size:16px;color:#fff;font-weight:700'; lab.textContent = '力度';
+    const slider = document.createElement('input'); slider.type = 'range'; slider.min = 0; slider.max = 20; slider.value = 0; slider.id = 'forceSlider';
+    slider.style.width = '200px';
+    slider.addEventListener('input', () => {
+      this.F = parseInt(slider.value, 10);
+      const el = $('fv'); if (el) el.textContent = this.F;
+    });
+    wrap.appendChild(lab); wrap.appendChild(slider);
+    $('gameUI').appendChild(wrap);
+    uiBtn('射箭', () => this.shoot(), 'gold');
+    uiMsg('调整力度后射箭，共 3 次机会');
+  },
+  end(){ clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; }
+};
+
+/* ---------------- 游戏 5：时钟救援（2D 几何） ---------------- */
+const clockG = makeGroup('clock');
+const clockGame = {
+  init(){ const g = clockG;
+    // 夜景背景
+    const skyC = document.createElement('canvas'); skyC.width = 64; skyC.height = 256;
+    const sk = skyC.getContext('2d');
+    const grad = sk.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, '#0d1228'); grad.addColorStop(1, '#1a2238');
+    sk.fillStyle = grad; sk.fillRect(0, 0, 64, 256);
+    const skyTex = new THREE.CanvasTexture(skyC); skyTex.encoding = THREE.sRGBEncoding;
+    const sky = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: skyTex });
+    sky.position.z = -5; g.add(sky);
+    const ground = rect(40, 3.2, 0x141b33); ground.position.set(0, -7.4, -4.5); g.add(ground);
+    // 纸箱（棕色矩形）+ 小猫（几何猫：圆头 + 矩形身 + 三角耳 + 圆眼）
+    const box = rect(2.1, 1.3, 0xc98a3e); box.position.set(-4.2, -4.3, -4.3); g.add(box);
+    this.kitten = new THREE.Group();
+    const body = rect(.62, .7, 0xffb366); body.position.y = -.25; this.kitten.add(body);
+    const head = circ(.34, 0xffb366); head.position.y = .42; this.kitten.add(head);
+    for (const sx of [-.2, .2]){
+      const ear = tri(.22, .26, 0xffb366); ear.position.set(sx, .82, .05); this.kitten.add(ear);
+    }
+    for (const sx of [-.12, .12]){
+      const eye = circ(.05, 0x2b2b3a); eye.position.set(sx, .48, .08); this.kitten.add(eye);
+    }
+    const nose = tri(.1, .08, 0xd94a4a); nose.position.set(0, .36, .08); this.kitten.add(nose);
+    this.kitten.position.set(-4.2, -3.6, -4.2); g.add(this.kitten);
+    // 圆形时钟（几何圆环 + 刻度线 + 数字 + 指针矩形）
+    this.clockRing = ring(1.9, 2.08, 0x5b6fc0);
+    this.clockRing.position.set(3.4, 2.6, -4.3); g.add(this.clockRing);
+    const cx = 3.4, cy = 2.6;
+    for (let i = 0; i < 10; i++){
+      const a = i * Math.PI*2/10;
+      const tick = lineSeg(cx + Math.cos(a)*1.85, cy + Math.sin(a)*1.85, cx + Math.cos(a)*2.0, cy + Math.sin(a)*2.0, 0xffffff, .06);
+      tick.position.z = -4.2; g.add(tick);
+      const num = textSprite(String(i), { size: 44, color: '#9ee6ff', unit: .5, pad: 0 });
+      num.position.set(cx + Math.cos(a)*1.45, cy + Math.sin(a)*1.45, -4.2); g.add(num);
+    }
+    this.hand = rect(.12, 1.55, 0xff5a4d);
+    this.hand.position.set(cx, cy + .78, -4.2); g.add(this.hand);
+    this.clockBase = new THREE.Vector3(cx, cy, -4.2);
+    this.clockG = g;
+  },
+  start(level, afterEnd){
+    this.afterEnd = afterEnd; this.level = level;
+    const cfg = [[7,5,[1,2]],[12,7,[1,2,5,-1,-2]],[18,9,[1,2,5,-1,-2,-3]]][level-1];
+    this.V = randi(level === 1 ? 5 : (level === 2 ? 8 : 10), cfg[0]);
+    this.airMax = cfg[1]; this.buttons = cfg[2];
+    this.value = 0; this.air = this.airMax; this.presses = 0; this.locked = false; this.won = false;
+    this.hand.position.set(this.clockBase.x, this.clockBase.y + .78, this.clockBase.z);
+    this.kitten.scale.set(1,1,1);
+    this.updateUI();
+    this.buildUI();
+  },
+  updateUI(){
+    const ones = this.value % 10, tens = Math.floor(this.value / 10);
+    $('statusLine').innerHTML =
+      '目标 <b style="color:#ffd75e">' + this.V + ' 秒</b> · 时钟 <b style="color:#9ee6ff">' + tens + ' ' + ones + '</b> · 空气 <b style="color:#8fe8b0">' + this.air + '/' + this.airMax + '</b> · 按键 ' + this.presses + ' 次';
+    const a = this.value / 10 * Math.PI * 2;
+    this.hand.position.set(this.clockBase.x + Math.sin(a) * .78, this.clockBase.y + Math.cos(a) * .78, this.clockBase.z);
+    this.kitten.scale.setScalar(1 + Math.sin(performance.now()/400) * .03);
+  },
+  press(v){
+    if (this.locked) return;
+    const prev = this.value;
+    this.value += v;
+    if (this.value < 0) this.value = 0;
+    this.presses++; this.air--;
+    Sfx.tick();
+    const carry = (this.value % 10) < (prev % 10) && this.value > prev;
+    const borrow = (this.value % 10) > (prev % 10) && this.value < prev;
+    $('formula').textContent = (v > 0 ? '+' : '') + v + ' → ' + prev + ' ' + (v >= 0 ? '＋' : '−') + Math.abs(v) + ' ＝ ' + this.value + (carry ? '（十位进 1）' : (borrow ? '（十位退 1）' : ''));
+    if (carry){ Sfx.coin(); toast('进 1！'); }
+    if (borrow){ Sfx.tick(); toast('退 1！'); }
+    if (this.value === this.V){ this.locked = true; setTimeout(() => this.win(), 350); }
+    else if (this.air <= 0){ this.locked = true; setTimeout(() => this.fail(), 350); }
+    this.updateUI();
+  },
+  win(){
+    Sfx.meow(); Sfx.win();
+    tween(this.kitten.scale, { x: 1.4, y: 1.4, z: 1.4 }, .4, easeOut);
+    const minAll = minPresses(this.V, this.buttons);
+    const stars = this.presses <= minAll + 1 ? 3 : (this.presses <= this.airMax - 1 ? 2 : 1);
+    const coins = 10 + (stars - 1) * 5;
+    SAVE.coins += coins; SAVE.stars += stars;
+    if ((SAVE.best[4][this.level-1] || 0) < stars) SAVE.best[4][this.level-1] = stars;
+    persist(); refreshHud();
+    showRating('时钟救援', stars, coins, this.afterEnd, '用了 ' + this.presses + ' 次按键');
+  },
+  fail(){
+    Sfx.fail(); toast('空气用完了…再试一次！');
+    setTimeout(() => {
+      this.value = 0; this.air = this.airMax; this.presses = 0; this.locked = false;
+      this.updateUI();
+    }, 1200);
+  },
+  buildUI(){
+    clearUI();
+    for (const v of this.buttons){
+      const cls = v > 0 ? 'green' : 'red';
+      uiBtn((v > 0 ? '+' : '') + v, () => this.press(v), cls + ' small');
+    }
+    uiMsg('把时钟凑到目标秒数，按键越少越好');
+  },
+  end(){ clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; }
+};
+
+
+/* ---------------- 游戏 6：方阵寻宝（2D 几何） ---------------- */
+const matrixG = makeGroup('matrix');
+const matrixGame = {
+  init(){ const g = matrixG;
+    // 夜空背景 + 网格区
+    const skyC = document.createElement('canvas'); skyC.width = 64; skyC.height = 256;
+    const sk = skyC.getContext('2d');
+    const grad = sk.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, '#0b0f26'); grad.addColorStop(1, '#101830');
+    sk.fillStyle = grad; sk.fillRect(0, 0, 64, 256);
+    const skyTex = new THREE.CanvasTexture(skyC); skyTex.encoding = THREE.sRGBEncoding;
+    const sky = geo(new THREE.PlaneGeometry(40, 22), 0xffffff, { map: skyTex });
+    sky.position.z = -5; g.add(sky);
+    const board = rect(10.2, 10.2, 0x1c2547); board.position.set(0, 0, -4.4); g.add(board);
+    this.tiles = [];
+    for (let r = 0; r < 10; r++){
+      for (let c = 0; c < 10; c++){
+        const tile = rect(.84, .84, 0x27335c);
+        tile.position.set(c - 4.5, r - 4.5, -4.3);
+        tile.userData.baseColor = 0x27335c;
+        g.add(tile); this.tiles.push(tile);
+        const num = textSprite(String(r*10 + c), { size: 28, color: '#8fa2e8', unit: .42, pad: 0 });
+        num.position.set(c - 4.5, r - 4.5, -4.2); g.add(num);
+      }
+    }
+    // 玩家（金色几何圆）
+    this.player = circ(.36, 0xffd75e);
+    this.player.position.set(-4.5, -4.5, -4.1);
+    g.add(this.player);
+    // 目标格（红色矩形边框）
+    this.targetTile = rect(.9, .9, 0xff5a4d, { transparent: true, opacity: .55 });
+    this.targetTile.visible = false;
+    g.add(this.targetTile);
+    this.matrixG = g;
+  },
+  start(level, afterEnd){
+    this.afterEnd = afterEnd; this.level = level;
+    this.Smax = level === 1 ? 1 : (level === 2 ? 3 : 5);
+    this.S = 1;
+    this.score = 100; this.steps = 0; this.locked = false; this.won = false;
+    do {
+      this.P = randi(0, 99);
+      if (level === 1){
+        const dir = Math.random() < .5;
+        const step = randi(1, 9);
+        this.T = dir ? Math.min(99, this.P + step) : Math.max(0, this.P - step);
+        if (dir) this.T = this.P + Math.min(step, 9 - this.P % 10);
+        else this.T = this.P - Math.min(step, this.P % 10);
+      } else {
+        this.T = randi(0, 99);
+      }
+    } while (this.T === this.P);
+    this.updateGrid();
+    this.updateInfo();
+    this.buildUI();
+  },
+  updateGrid(){
+    const r = Math.floor(this.P / 10), c = this.P % 10;
+    this.player.position.set(c - 4.5, r - 4.5, -4.1);
+    const tr = Math.floor(this.T / 10), tc = this.T % 10;
+    this.targetTile.position.set(tc - 4.5, tr - 4.5, -4.2);
+    this.targetTile.visible = true;
+  },
+  updateInfo(){
+    $('statusLine').innerHTML =
+      '你在 <b style="color:#9ee6ff">' + this.P + '</b> · 目标 <b style="color:#ffd75e">' + this.T + '</b> · 步数 ' + this.steps + ' · 分数 <b style="color:#8fe8b0">' + this.score + '</b> · 步长 ' + this.S;
+  },
+  move(dir){
+    if (this.locked || this.won) return;
+    const r = Math.floor(this.P / 10), c = this.P % 10;
+    let np = this.P, label = '';
+    if (dir === 'left'){ if (c - this.S < 0){ this.oob(); return; } np = this.P - this.S; label = this.P + ' − ' + this.S + ' ＝ ' + np; }
+    else if (dir === 'right'){ if (c + this.S > 9){ this.oob(); return; } np = this.P + this.S; label = this.P + ' ＋ ' + this.S + ' ＝ ' + np; }
+    else if (dir === 'up'){ if (r - this.S < 0){ this.oob(); return; } np = this.P - 10 * this.S; label = this.P + ' − ' + (10*this.S) + ' ＝ ' + np; }
+    else if (dir === 'down'){ if (r + this.S > 9){ this.oob(); return; } np = this.P + 10 * this.S; label = this.P + ' ＋ ' + (10*this.S) + ' ＝ ' + np; }
+    this.P = np; this.steps++;
+    this.score -= Math.max(1, 5 - this.S);
+    Sfx.tick();
+    this.updateGrid();
+    $('formula').textContent = label;
+    this.updateInfo();
+    if (this.P === this.T){ this.won = true; this.locked = true; setTimeout(() => this.win(), 400); }
+  },
+  oob(){
+    this.score = Math.max(0, this.score - 1);
+    toast('出界！扣 1 分');
+    this.updateInfo();
+  },
+  hint(){
+    if (this.locked || this.won) return;
+    this.score = Math.max(0, this.score - 1);
+    Sfx.click();
+    const tr = Math.floor(this.T / 10), tc = this.T % 10;
+    for (const t of this.tiles){
+      if (Math.round(t.position.x + 4.5) === tc || Math.round(t.position.y + 4.5) === tr){
+        t.material = new THREE.MeshBasicMaterial({ color: 0x8fe8ff });
+      }
+    }
+    toast('高亮了目标的行与列（−1 分）');
+    setTimeout(() => {
+      for (const t of this.tiles) t.material = new THREE.MeshBasicMaterial({ color: 0x27335c });
+    }, 1600);
+    this.updateInfo();
+  },
+  win(){
+    Sfx.win();
+    const stars = this.score >= 90 ? 3 : (this.score >= 80 ? 2 : 1);
+    const coins = 10 + (stars - 1) * 5;
+    SAVE.coins += coins; SAVE.stars += stars;
+    if ((SAVE.best[5][this.level-1] || 0) < stars) SAVE.best[5][this.level-1] = stars;
+    persist(); refreshHud();
+    showRating('方阵寻宝', stars, coins, this.afterEnd, '剩余 ' + this.score + ' 分');
+  },
+  buildUI(){
+    clearUI();
+    uiBtn('← 左', () => this.move('left'), 'small');
+    uiBtn('→ 右', () => this.move('right'), 'small');
+    uiBtn('↑ 上', () => this.move('up'), 'small');
+    uiBtn('↓ 下', () => this.move('down'), 'small');
+    const row = document.createElement('div'); row.className = 'grow'; $('gameUI').appendChild(row);
+    for (let s = 1; s <= this.Smax; s++) uiBtn('步长 ' + s, () => { this.S = s; this.updateInfo(); }, 'tiny');
+    uiBtn('提示(−1分)', () => this.hint(), 'gold tiny');
+  },
+  end(){ clearUI(); $('statusLine').innerHTML = ''; $('formula').textContent = ''; this.targetTile.visible = false; }
+};
+
+/* ---------------- 场景切换与流程 ---------------- */
+const gameInstances = [appleGame, crossGame, stairGame, shootGame, clockGame, matrixGame];
+const gameNames = ['摘苹果', '扶老奶奶过马路', '帮小男孩爬楼梯', '打靶', '时钟救援', '方阵寻宝'];
+const gameDescs = [
+  '把树上的苹果摘到左边托盘，让天平平衡：右边砝码是多少，就摘多少个苹果。数字就是苹果的个数。',
+  '按 ＋1/＋2/＋5 让老奶奶走过数轴，绿灯用光前到达终点。步数越少分越高。',
+  '男孩在 F 层，要到 T 层。填上 ＋/− 和数字，让他到达目标楼层。',
+  '距离 ＋ 角度 ＝ 力度才能中 0 环（靶心最高分）。三次机会累计积分。',
+  '用 ＋/− 按钮把时钟凑到目标秒数。个位逢九进一、逢零退一。按键越少越好。',
+  '在 0–99 方阵里走到目标格。左减 S、右加 S、上减 10S、下加 10S。'
+];
+
+let activeName = 'world';
+let currentGame = -1, currentLevel = 1, pendingAfterEnd = null;
+
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* UI 工具 */
+function clearUI(){ $('gameUI').innerHTML = ''; }
+function uiBtn(label, fn, cls){
+  const b = document.createElement('button');
+  b.className = 'gbtn ' + (cls || '');
+  b.textContent = label;
+  b.addEventListener('click', () => { audio(); Sfx.click(); fn(); });
+  $('gameUI').appendChild(b);
+  return b;
+}
+function uiMsg(html){
+  const d = document.createElement('div');
+  d.className = 'gmsg'; d.innerHTML = html;
+  $('gameUI').appendChild(d);
+  return d;
+}
+
+/* 难度选择 + 开始 */
+function showIntro(gameIdx, defLevel){
+  currentGame = gameIdx - 1;
+  $('introTitle').textContent = gameNames[currentGame];
+  $('introDesc').innerHTML = gameDescs[currentGame] + '<br><span style="color:#ffd75e">最高记录：' + (maxBest(currentGame) || 0) + ' 星</span>';
+  const row = $('lvlRow'); row.innerHTML = '';
+  currentLevel = clamp(defLevel || 1, 1, 3);
+  const btns = [];
+  for (let l = 1; l <= 3; l++){
+    const b = document.createElement('button');
+    b.className = 'lvlBtn' + (l === currentLevel ? ' on' : '');
+    b.textContent = '★'.repeat(l);
+    b.addEventListener('click', () => {
+      currentLevel = l;
+      btns.forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      Sfx.click();
+    });
+    row.appendChild(b); btns.push(b);
+  }
+  $('introScreen').classList.remove('hidden');
+}
+$('introGo').addEventListener('click', () => {
+  $('introScreen').classList.add('hidden');
+  enterGame(currentGame, currentLevel);
+});
+
+function enterGame(idx, level){
+  audio();
+  fadeIn(() => {
+    showOnly('world');
+    groups['world'].visible = false;
+    const keys = ['apple','cross','stair','shoot','clock','matrix'];
+    groups[keys[idx]].visible = true;
+    for (const k in groupLights) for (const l of groupLights[k]) l.visible = (k === keys[idx]);
+    activeName = keys[idx];
+    $('backBtn').style.display = 'inline-block';
+    pendingAfterEnd = () => backToWorld();
+    gameInstances[idx].start(level, pendingAfterEnd);
+    fadeOut();
+  });
+}
+
+function backToWorld(){
+  if (currentGame >= 0 && gameInstances[currentGame].end) gameInstances[currentGame].end();
+  currentGame = -1;
+  fadeIn(() => {
+    showOnly('world');
+    activeName = 'world';
+    $('backBtn').style.display = 'none';
+    fadeOut();
+  });
+}
+
+/* 结算 */
+function showRating(name, stars, coins, afterEnd, extra){
+  $('ratingTitle').textContent = name + ' · 完成！';
+  const st = $('ratingStars');
+  st.innerHTML = '';
+  for (let i = 0; i < 3; i++){
+    const s = document.createElement('span');
+    s.textContent = '★';
+    s.className = i < stars ? '' : 'off';
+    st.appendChild(s);
+  }
+  $('ratingGot').textContent = (extra ? extra + ' · ' : '') + '金币 +' + coins;
+  $('ratingScreen').classList.remove('hidden');
+  $('againBtn').onclick = () => {
+    $('ratingScreen').classList.add('hidden');
+    enterGame(currentGame >= 0 ? currentGame : 0, currentLevel);
+  };
+  $('backWorldBtn').onclick = () => {
+    $('ratingScreen').classList.add('hidden');
+    afterEnd && afterEnd();
+  };
+  audio(); Sfx.win();
+}
+
+/* 淡入淡出 */
+function fadeIn(fn){ const f = $('fade'); f.classList.add('on'); setTimeout(() => { fn(); }, 260); }
+function fadeOut(){ const f = $('fade'); f.classList.remove('on'); }
+
+/* ---------------- 主循环 ---------------- */
+$('startBtn').addEventListener('click', () => {
+  audio(); Sfx.win();
+  $('startScreen').classList.add('hidden');
+  refreshHud();
+  toast('走向发光的几何入口，点击进入游戏');
+});
+$('backBtn').addEventListener('click', backToWorld);
+
+/* 调试/测试句柄（对玩法无影响） */
+window.__game = { groups, worldG, girl, camera, renderer, appleGame, crossGame, stairGame, shootGame, clockGame, matrixGame, showIntro, enterGame, backToWorld, maxBest };
+window.__state = { get active(){ return activeName; }, get currentGame(){ return currentGame; }, get level(){ return currentLevel; } };
+
+const clock = new THREE.Clock();
+let lastT = performance.now();
+function animate(){
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min((now - lastT) / 1000, .05); lastT = now;
+  const t = now / 1000;
+  if (activeName === 'world') updateWorld(dt, t);
+  else if (activeName === 'apple' && appleGame.update) appleGame.update(dt, t);
+  renderer.render(scene, camera);
+}
+
+/* 初始化 */
+(function boot(){
+  appleGame.init(); crossGame.init(); stairGame.init(); shootGame.init(); clockGame.init(); matrixGame.init();
+  groups['world'].visible = true;
+  showOnly('world');
+  refreshHud();
+  animate();
+})();
+} catch(e){
+  console.error(e);
+  const s = document.getElementById('startScreen');
+  if (s) s.innerHTML = '<div class="card"><h1>数字星夜加载失败了</h1><p>可能是网络问题导致 three.js 加载失败，请检查网络后刷新页面重试。</p></div>';
+}
+
+</script>
+</body>
 </html>

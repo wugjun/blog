@@ -12,6 +12,7 @@ INCLUDE_DRAFTS=false  # 是否包含草稿内容
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # 错误处理
@@ -68,6 +69,15 @@ main() {
     fi
     echo -e "${GREEN}✓ Hugo 构建完成${NC}"
     
+    # 1.5 复制不需要编译的 HTML 文件到 public 目录
+    echo -e "${YELLOW}步骤 1.5: 复制学习之路原样 HTML 文件 (隔离部署，不参与 Hugo 渲染)${NC}"
+    if [ -d "static/学习之路" ]; then
+        mkdir -p "$LOCAL_PUBLIC_DIR/apps/学习之路"
+        # 将文件复制到 apps 目录下实现路径隔离
+        cp static/学习之路/*.html "$LOCAL_PUBLIC_DIR/apps/学习之路/" 2>/dev/null || true
+        echo -e "${GREEN}✓ 学习之路 HTML 文件已隔离至 /apps 路径${NC}"
+    fi
+    
     # 2. 检查 public 目录
     if [ ! -d "$LOCAL_PUBLIC_DIR" ]; then
         echo -e "${RED}错误: $LOCAL_PUBLIC_DIR 目录不存在！${NC}"
@@ -115,6 +125,21 @@ main() {
     echo -e "${GREEN}目标路径: $REMOTE_PATH${NC}"
     echo -e "${GREEN}部署时间: $(date '+%Y-%m-%d %H:%M:%S')${NC}"
     echo -e "${GREEN}========================================${NC}"
+    
+    # 9. Nginx 配置提醒
+    echo -e "${YELLOW}提示: 建议在 Nginx 配置文件中增加以下【完全隔离】的虚拟路径配置：${NC}"
+    echo -e "${CYAN}"
+    echo "    # 独立应用隔离路径 (解决首页栏目占用问题)"
+    echo "    location /apps/ {"
+    echo "        alias ${REMOTE_PATH}/apps/;"
+    echo "        index index.html;"
+    echo "        expires -1;"
+    echo "        add_header Cache-Control \"no-cache, no-store, must-revalidate\";"
+    echo "        add_header X-Frame-Options \"ALLOWALL\";"
+    echo "        add_header Access-Control-Allow-Origin \"*\";"
+    echo "        try_files \$uri \$uri/ =404;"
+    echo "    }"
+    echo -e "${NC}"
     echo ""
     
     # 8. 可选：在本地 git 中创建 tag（如果当前目录是 git 仓库）
