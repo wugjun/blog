@@ -71,10 +71,10 @@ main() {
     
     # 1.5 复制不需要编译的 HTML 文件到 public 目录
     echo -e "${YELLOW}步骤 1.5: 复制学习之路原样 HTML 文件 (隔离部署，不参与 Hugo 渲染)${NC}"
-    if [ -d "static/学习之路" ]; then
+    if [ -d "content/学习之路" ]; then
         mkdir -p "$LOCAL_PUBLIC_DIR/apps/学习之路"
         # 将文件复制到 apps 目录下实现路径隔离
-        cp static/学习之路/*.html "$LOCAL_PUBLIC_DIR/apps/学习之路/" 2>/dev/null || true
+        cp 学习之路/*.html "$LOCAL_PUBLIC_DIR/apps/学习之路/" 2>/dev/null || true
         echo -e "${GREEN}✓ 学习之路 HTML 文件已隔离至 /apps 路径${NC}"
     fi
     
